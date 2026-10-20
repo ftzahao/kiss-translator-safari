@@ -1,0 +1,163 @@
+# XcodeGen specification for the KISS Translator Safari wrapper.
+#
+# Generate with (from the repository root):
+#   cd <repo-root>
+#   $(mise which xcodegen) generate \
+#       --spec config/project.yml --project . --project-root .
+#
+# `--project-root .` is REQUIRED: without it XcodeGen resolves every path
+# below against config/ (the spec's directory) and the project references
+# <root>/config/app/... instead of <root>/app/....
+#
+# Output: KISSTranslator.xcodeproj at the repository root (git-ignored).
+#
+# PATH CONVENTION ------------------------------------------------------
+# With `--project-root .`, every path below is simply relative to the
+# repository root and lands verbatim in the generated pbxproj. The folder
+# reference is emitted as `path = build/extension; sourceTree = SOURCE_ROOT`,
+# which `builtin-copy` dereferences as <root>/build/extension (verbatim copy).
+#
+# build/extension must exist before the native build; produce it with
+# `make extension`. There is deliberately no fallback: an appex with an empty
+# Resources folder is a broken, installable app.
+
+name: KISSTranslator
+
+options:
+  bundleIdPrefix: com.ftzahao
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+  generateEmptyDirectories: false
+  xcodeVersion: "27.0"
+
+settings:
+  base:
+    MARKETING_VERSION: "2.1.1"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    ARCHS: "$(ARCHS_STANDARD)"
+    ONLY_ACTIVE_ARCH: NO
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_HARDENED_RUNTIME: YES
+    # DEVELOPMENT_TEAM is intentionally NOT set here. XcodeGen does not expand
+    # ${...} environment variables and a hard-coded team id would leak into
+    # unsigned CI builds. Pass it on the command line when signing:
+    #   xcodebuild ... DEVELOPMENT_TEAM=QX47UN2DPB
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_EMIT_LOC_STRINGS: NO
+    CLANG_ENABLE_MODULES: YES
+    DEAD_CODE_STRIPPING: YES
+    ALWAYS_SEARCH_USER_PATHS: NO
+    # Disabled project-wide because the extension target's post-compile phase
+    # writes into the build products directory (see "Embed web extension
+    # resources"). The phase only ever touches ${TARGET_BUILD_DIR}, and no
+    # other target runs scripts, so there is nothing for the sandbox to guard.
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    LOCALIZATION_PREFERS_STRING_CATALOGS: NO
+  configs:
+    Debug:
+      DEBUG_INFORMATION_FORMAT: dwarf
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+    Release:
+      DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+      SWIFT_COMPILATION_MODE: wholemodule
+
+fileGroups:
+  - config
+  - scripts
+
+targets:
+  # ---------------------------------------------------------------------------
+  # Containing app.
+  # ---------------------------------------------------------------------------
+  KISSTranslator:
+    type: application
+    platform: macOS
+    productName: KISSTranslator
+    sources:
+      - path: app/Sources
+      # Shared with the extension target (which compiles it from its own
+      # sources directory). Do not add it to the extension's list again.
+      - path: extension/Sources/AppConfiguration.swift
+      - path: app/Resources
+        buildPhase: resources
+      - path: app/Assets.xcassets
+      - path: app/Info.plist
+        buildPhase: none
+      - path: app/KISSTranslator.entitlements
+        buildPhase: none
+    dependencies:
+      - target: KISSTranslator Extension
+        embed: true
+        codeSign: true
+        removeHeaders: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ftzahao.kisstranslator
+        PRODUCT_NAME: KISSTranslator
+        INFOPLIST_FILE: app/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: app/KISSTranslator.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        # Entitlements come exclusively from CODE_SIGN_ENTITLEMENTS; the
+        # ENABLE_APP_SANDBOX / ENABLE_OUTGOING_NETWORK_CONNECTIONS settings
+        # make Xcode regenerate and overwrite those files.
+        ENABLE_HARDENED_RUNTIME: YES
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+        COMBINE_HIDPI_IMAGES: YES
+    scheme: {}
+
+  # ---------------------------------------------------------------------------
+  # Safari web extension (.appex), embedded at Contents/PlugIns/.
+  # ---------------------------------------------------------------------------
+  KISSTranslator Extension:
+    type: app-extension
+    platform: macOS
+    productName: KISSTranslator Extension
+    sources:
+      - path: extension/Sources
+      - path: extension/Info.plist
+        buildPhase: none
+      - path: extension/KISSTranslatorExtension.entitlements
+        buildPhase: none
+    # Safari requires manifest.json to sit DIRECTLY in Contents/Resources/.
+    # Declaring build/extension as a folder *resource* makes Xcode emit
+    # `builtin-copy -exclude ... build/extension` which lands at
+    # Contents/Resources/extension/ — one level too deep, and Safari then
+    # refuses to load the appex. Copying the tree onto the Resources root in a
+    # post-compile phase gives the flat layout Safari expects while keeping
+    # the directory structure inside it (api/, _locales/, static/, ...).
+    postCompileScripts:
+      - name: Embed web extension resources
+        basedOnDependencyAnalysis: false
+        script: |
+          set -euo pipefail
+          SRC="${SRCROOT}/build/extension"
+          DEST="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}"
+          if [ ! -f "${SRC}/manifest.json" ]; then
+            echo "error: ${SRC}/manifest.json is missing. Run 'make extension' first." >&2
+            exit 1
+          fi
+          mkdir -p "${DEST}"
+          # Drop any stale copy from a previous build so removed files do not
+          # linger in the appex.
+          rm -rf "${DEST}/extension"
+          ditto "${SRC}" "${DEST}"
+          echo "Embedded $(find "${SRC}" -type f | wc -l | tr -d ' ') web extension files into ${DEST}"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ftzahao.kisstranslator.extension
+        PRODUCT_NAME: KISSTranslator Extension
+        PRODUCT_MODULE_NAME: KISSTranslator_Extension
+        INFOPLIST_FILE: extension/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: extension/KISSTranslatorExtension.entitlements
+        SKIP_INSTALL: YES
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SWIFT_EMIT_LOC_STRINGS: NO
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks"
+        ENABLE_HARDENED_RUNTIME: YES

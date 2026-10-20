@@ -1,0 +1,24 @@
+/* KISS Translator — main app UI (Simplified Chinese).
+   This is the development-region language: the keys are the Chinese source
+   strings used in `app/Sources/*.swift`. Keep in sync with en.lproj. */
+
+"Safari 未返回扩展状态。" = "Safari 未返回扩展状态。";
+"Safari 已启用 KISS Translator 扩展。" = "Safari 已启用 KISS Translator 扩展。";
+"上游项目" = "上游项目";
+"未启用" = "未启用";
+"无法获取状态" = "无法获取状态";
+"本仓库" = "本仓库";
+"正在向 Safari 查询扩展状态。" = "正在向 Safari 查询扩展状态。";
+"正在检查扩展状态…" = "正在检查扩展状态…";
+"版本" = "版本";
+"优雅的双语对照翻译扩展，支持网页、选词与视频字幕。" = "优雅的双语对照翻译扩展，支持网页、选词与视频字幕。";
+"打开 Safari 扩展设置" = "打开 Safari 扩展设置";
+"开启 Safari 扩展" = "开启 Safari 扩展";
+"已启用" = "已启用";
+"快捷键：⌥K 打开面板，⌥Q 翻译当前网页，⌥S 打开翻译框。" = "快捷键：⌥K 打开面板，⌥Q 翻译当前网页，⌥S 打开翻译框。";
+"点击下方按钮，浏览器会打开 Safari 设置。" = "点击下方按钮，浏览器会打开 Safari 设置。";
+"首次使用时，按提示允许扩展访问网页；随后刷新页面即可。" = "首次使用时，按提示允许扩展访问网页；随后刷新页面即可。";
+"请在 Safari 设置的「扩展」中勾选 KISS Translator。" = "请在 Safari 设置的「扩展」中勾选 KISS Translator。";
+"在左侧选择「扩展」，勾选右侧的 KISS Translator。" = "在左侧选择「扩展」，勾选右侧的 KISS Translator。";
+"项目主页" = "项目主页";
+"重新检查状态" = "重新检查状态";

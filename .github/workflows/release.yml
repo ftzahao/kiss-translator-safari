@@ -1,0 +1,265 @@
+name: Release
+
+# Builds a universal macOS build of the KISS Translator Safari Web Extension and
+# attaches it to a GitHub Release.
+#
+# Triggers
+#   - push of a tag matching `v*` (e.g. `v2.1.1`)  -> build + create release
+#   - manual `workflow_dispatch`                  -> build + upload workflow artifacts
+
+"on":
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Create/update a GitHub Release for the tag (counterpart of a tag push). Leave false to only upload workflow artifacts."
+        type: boolean
+        default: false
+      include_store_zip:
+        description: "Also produce UNSIGNED-STORE-UPLOAD.zip (see job `store-zip`; not notarized, not App Store ready)."
+        type: boolean
+        default: true
+
+# Never run two releases of the same tag at once; a newer run cancels an older one.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  # Upstream pins pnpm 9.14.4 (see config/build.config.mjs -> upstream.pnpmVersion).
+  # pnpm 10+ fails with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH against the upstream lockfile.
+  PNPM_VERSION: "9.14.4"
+  NODE_VERSION: "22"
+  # Unsigned / ad-hoc build flags shared by `make` and raw `xcodebuild` invocations.
+  CODE_SIGN_IDENTITY: "-"
+  CODE_SIGNING_REQUIRED: "NO"
+  CODE_SIGNING_ALLOWED: "NO"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Primary job: unsigned DMG + ZIP for direct download from the Releases page.
+  # ---------------------------------------------------------------------------
+  build:
+    name: Build (release artifacts)
+    runs-on: macos-15
+    timeout-minutes: 45
+    outputs:
+      version: ${{ steps.version.outputs.value }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          # Intentionally no `cache: pnpm`: this repository has no root pnpm-lock.yaml.
+          # Caching is handled inside the upstream work tree by the Makefile targets.
+
+      - name: Install XcodeGen
+        run: |
+          command -v xcodegen || brew install xcodegen
+          xcodegen --version
+
+      - name: Resolve version
+        id: version
+        run: |
+          VERSION=$(node -e 'import("./config/build.config.mjs").then(m => process.stdout.write(m.app.marketingVersion))')
+          TAG="${GITHUB_REF_NAME}"
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            # Convention: tag `vX.Y.Z` must match app.marketingVersion.
+            if [[ "v${VERSION}" != "${TAG}" ]]; then
+              echo "::error::Tag ${TAG} does not match app.marketingVersion ${VERSION} in config/build.config.mjs"
+              exit 1
+            fi
+          fi
+          echo "Building KISS Translator ${VERSION}"
+          echo "value=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Build (unsigned)
+        run: make all SIGNING=0
+
+      - name: Ad-hoc sign the app
+        # `make all SIGNING=0` produces an unsigned .app. Ad-hoc signing (identity `-`)
+        # does not require the owner's Developer ID; it only lets the app run once the
+        # quarantine flag is cleared by the user. It does NOT satisfy Gatekeeper
+        # verification and is NOT notarized.
+        run: |
+          APP="build/App/KISSTranslator.app"
+          test -d "${APP}" || { echo "::error::${APP} not found"; exit 1; }
+          codesign --force --deep --sign - "${APP}"
+          codesign --verify --deep --strict --verbose=2 "${APP}" || \
+            echo "::warning::codesign verification reported issues (expected for ad-hoc signing)"
+          spctl --assess --type execute -vv "${APP}" || true
+
+      - name: Create DMG and ZIP
+        run: |
+          make dmg SIGNING=0
+          ls -l build/dist
+
+      - name: Compute checksums
+        run: |
+          VERSION="${{ steps.version.outputs.value }}"
+          cd build/dist
+          # Fail loudly if the expected artifacts are missing rather than publishing a partial release.
+          test -f "KISSTranslator-${VERSION}.dmg" || { echo "::error::KISSTranslator-${VERSION}.dmg not found"; ls -la; exit 1; }
+          test -f "KISSTranslator-${VERSION}.zip" || { echo "::error::KISSTranslator-${VERSION}.zip not found"; ls -la; exit 1; }
+          shasum -a 256 "KISSTranslator-${VERSION}.dmg" "KISSTranslator-${VERSION}.zip" > checksums.txt
+          cat checksums.txt
+          # Mirror artifacts at the repo root expected by the upload step below.
+          mkdir -p "${GITHUB_WORKSPACE}/out"
+          cp "KISSTranslator-${VERSION}.dmg" "KISSTranslator-${VERSION}.zip" checksums.txt "${GITHUB_WORKSPACE}/out/"
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log-${{ github.run_id }}
+          path: |
+            build/logs/**
+            build/**/*.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload release artifacts (workflow run)
+        uses: actions/upload-artifact@v4
+        with:
+          name: KISSTranslator-${{ steps.version.outputs.value }}-unsigned
+          path: out/*
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub Release
+        if: github.ref_type == 'tag' || inputs.publish
+        uses: softprops/action-gh-release@v2
+        with:
+          # For workflow_dispatch runs `github.ref_name` is the branch name; the tag must be supplied.
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', steps.version.outputs.value) }}
+          name: ${{ format('KISS Translator for Safari {0}', steps.version.outputs.value) }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            out/KISSTranslator-${{ steps.version.outputs.value }}.dmg
+            out/KISSTranslator-${{ steps.version.outputs.value }}.zip
+            out/checksums.txt
+          body: |
+            macOS build of the **KISS Translator** Safari Web Extension (upstream ${{ steps.version.outputs.value }}).
+
+            > **This build is UNSIGNED and NOT NOTARIZED.** macOS will warn that the app
+            > "cannot be opened because the developer cannot be verified". The app is
+            > ad-hoc signed and will run normally once you clear the quarantine flag.
+
+            ### Install
+
+            1. Download `KISSTranslator-${{ steps.version.outputs.value }}.dmg` (verify it against `checksums.txt`).
+            2. Open the DMG and drag **KISS Translator.app** into `/Applications`.
+            3. Clear the quarantine attribute (one of):
+               - Right-click the app in Finder → **Open** → **Open** again; or
+               - Run in Terminal:
+                 ```sh
+                 xattr -dr com.apple.quarantine "/Applications/KISS Translator.app"
+                 ```
+            4. Launch the app once. It only explains how to enable the extension.
+            5. **Safari → Settings → Extensions** → enable **KISS Translator**.
+            6. Grant the extension access to the websites you want translated
+               (manage per-site permissions in the same Extensions pane), or choose
+               "Always Allow on Every Website" if you prefer.
+
+            ### Verify the download
+
+            ```sh
+            shasum -a 256 -c checksums.txt
+            ```
+
+            ### Notes
+
+            - The shipped extension version always equals the pinned upstream release
+              (`config/build.config.mjs`). Upstream project: https://github.com/fishjar/kiss-translator
+            - This is an unofficial, community-packaged derivative work distributed under
+              GPL-3.0. Please report packaging issues here, and extension (JS) issues upstream.
+            - Xcode / Safari versions are not required to install this build.
+
+  # ---------------------------------------------------------------------------
+  # Secondary job: .zip containing the .appex, laid out for App Store Connect.
+  #
+  # NOT SUITABLE FOR DISTRIBUTION AS-IS. This archive is unsigned. Uploading to
+  # App Store Connect and passing notarization / App Review requires the owner's
+  # own Apple Developer Program membership: a "Developer ID Application" or
+  # "Apple Distribution" certificate, an App Store provisioning profile containing
+  # the extension's App ID, hardened runtime, and `notarytool` submission with an
+  # app-specific password or API key. None of that can be automated in this
+  # public workflow because it needs private signing material. Download this
+  # artifact, sign + notarize it locally, then upload it with Xcode Organizer or
+  # `xcrun altool` / `xcrun notarytool`.
+  #
+  # The .appex currently bundles an MV3 manifest. Safari on macOS 14+ accepts
+  # Web Extension manifests through Xcode's "Safari Web Extension Converter";
+  # if the extension fails to load during conversion, run
+  # `xcrun safari-web-extension-converter --no-open --no-prompt <appex>` locally
+  # and re-sign. This is intentionally not automated.
+  # ---------------------------------------------------------------------------
+  store-zip:
+    name: Build (unsigned store-upload ZIP)
+    runs-on: macos-15
+    timeout-minutes: 45
+    if: github.ref_type == 'tag' || inputs.include_store_zip || inputs.publish
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install XcodeGen
+        run: command -v xcodegen || brew install xcodegen
+
+      - name: Build (unsigned)
+        run: make all SIGNING=0
+
+      - name: Package app for App Store Connect (unsigned)
+        run: |
+          VERSION=$(node -e 'import("./config/build.config.mjs").then(m => process.stdout.write(m.app.marketingVersion))')
+          APP="build/App/KISSTranslator.app"
+          test -d "${APP}" || { echo "::error::${APP} not found"; exit 1; }
+          test -d "${APP}/Contents/PlugIns/KISSTranslatorExtension.appex" || \
+            echo "::warning::Expected .appex at ${APP}/Contents/PlugIns/KISSTranslatorExtension.appex"
+          mkdir -p out
+          # A store upload ships the .app (with the embedded .appex) zipped with
+          # `ditto`, mirroring the layout Xcode Organizer produces.
+          ditto -c -k --sequesterRsrc --keepParent "${APP}" "out/UNSIGNED-STORE-UPLOAD-${VERSION}.zip"
+          unzip -l "out/UNSIGNED-STORE-UPLOAD-${VERSION}.zip" | head -40
+
+      - name: Upload unsigned store ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: UNSIGNED-STORE-UPLOAD-must-be-signed-locally
+          path: out/UNSIGNED-STORE-UPLOAD-*.zip
+          if-no-files-found: error
+          retention-days: 30

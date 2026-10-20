@@ -1,0 +1,23 @@
+/* KISS Translator — main app UI (English).
+   Keys are the Chinese source strings used in `app/Sources/*.swift`. */
+
+"Safari 未返回扩展状态。" = "Safari returned no extension state.";
+"Safari 已启用 KISS Translator 扩展。" = "The KISS Translator extension is enabled in Safari.";
+"上游项目" = "Upstream Project";
+"未启用" = "Not Enabled";
+"无法获取状态" = "Status Unavailable";
+"本仓库" = "This Repository";
+"正在向 Safari 查询扩展状态。" = "Asking Safari for the extension's status.";
+"正在检查扩展状态…" = "Checking extension status…";
+"版本" = "Version";
+"优雅的双语对照翻译扩展，支持网页、选词与视频字幕。" = "A refined bilingual translation extension for web pages, selected text, and video subtitles.";
+"打开 Safari 扩展设置" = "Open Safari Extension Settings";
+"开启 Safari 扩展" = "Turn On the Safari Extension";
+"已启用" = "Enabled";
+"快捷键：⌥K 打开面板，⌥Q 翻译当前网页，⌥S 打开翻译框。" = "Shortcuts: ⌥K opens the popup, ⌥Q translates the page, ⌥S opens the translation box.";
+"点击下方按钮，浏览器会打开 Safari 设置。" = "Click the button below to open Safari settings.";
+"首次使用时，按提示允许扩展访问网页；随后刷新页面即可。" = "The first time you use it, allow the extension to access web pages when prompted, then reload the page.";
+"请在 Safari 设置的「扩展」中勾选 KISS Translator。" = "Select KISS Translator under Extensions in Safari settings.";
+"在左侧选择「扩展」，勾选右侧的 KISS Translator。" = "Choose Extensions in the sidebar, then tick KISS Translator.";
+"项目主页" = "Project Home";
+"重新检查状态" = "Check Again";

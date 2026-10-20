@@ -1,0 +1,142 @@
+name: CI
+
+# Proves that the repository builds from a clean checkout:
+#   upstream checkout -> MV3 web extension -> XcodeGen project -> Release .app (unsigned)
+
+"on":
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  # Must match upstream.pnpmVersion in config/build.config.mjs.
+  # pnpm 10+ fails with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH against the upstream lockfile.
+  PNPM_VERSION: "9.14.4"
+  NODE_VERSION: "22"
+  CODE_SIGN_IDENTITY: "-"
+  CODE_SIGNING_REQUIRED: "NO"
+  CODE_SIGNING_ALLOWED: "NO"
+
+jobs:
+  build:
+    name: Build (unsigned)
+    runs-on: macos-15
+    # Hard ceiling; the build itself finishes well under this.
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          # No `cache: pnpm`: there is no root pnpm-lock.yaml in this repository.
+
+      - name: Install XcodeGen
+        run: |
+          command -v xcodegen || brew install xcodegen
+          xcodegen --version
+
+      - name: Show toolchain versions
+        run: |
+          sw_vers
+          xcodebuild -version
+          node --version
+          pnpm --version
+          uname -m
+
+      - name: Build web extension
+        run: make extension
+
+      - name: Generate Xcode project
+        run: make project
+
+      - name: Build app (strict, unsigned)
+        run: |
+          set -o pipefail
+          mkdir -p build/logs
+          # Same flags as `make build SIGNING=0`, spelled out explicitly so CI fails
+          # fast if the generated project changes scheme/target names.
+          xcodebuild \
+            -project KISSTranslator.xcodeproj \
+            -scheme KISSTranslator \
+            -configuration Release \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGN_IDENTITY=- \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tee build/logs/xcodebuild.log
+
+      - name: Assert app bundle and embedded extension
+        run: |
+          set -euo pipefail
+          APP="build/App/KISSTranslator.app"
+          APPEX_NAMES=("KISSTranslator Extension.appex" "KISSTranslatorExtension.appex" "KISSTranslator.appex")
+
+          test -d "${APP}" || { echo "::error::${APP} missing"; find build -maxdepth 3 -name '*.app' -print; exit 1; }
+
+          APPEX=""
+          for name in "${APPEX_NAMES[@]}"; do
+            if [[ -d "${APP}/Contents/PlugIns/${name}" ]]; then APPEX="${APP}/Contents/PlugIns/${name}"; break; fi
+          done
+          if [[ -z "${APPEX}" ]]; then
+            echo "::error::No .appex inside ${APP}/Contents/PlugIns"
+            ls -la "${APP}/Contents/PlugIns" || true
+            exit 1
+          fi
+          echo "Found extension: ${APPEX}"
+
+          test -f "${APPEX}/Contents/Resources/manifest.json" || {
+            echo "::error::manifest.json not found inside ${APPEX}"; exit 1;
+          }
+          node -e '
+            const fs = require("fs");
+            const m = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+            if (m.manifest_version !== 3) { console.error("::error::manifest_version is not 3"); process.exit(1); }
+            console.log("manifest.json OK: version=" + m.version + " mv=" + m.manifest_version);
+          ' "${APPEX}/Contents/Resources/manifest.json"
+
+          lipo -info "${APP}" 2>/dev/null || true
+          du -sh "${APP}"
+
+      - name: Upload build log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            build/logs/**
+            build/**/*.log
+            build/**/*.xcresult
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload unsigned app on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-failed-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/App
+          if-no-files-found: ignore
+          retention-days: 3

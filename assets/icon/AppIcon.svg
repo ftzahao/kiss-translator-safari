@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <!-- macOS-style rounded rect: Apple's icon grid uses a 824x824 body with a
+         100px corner radius on a 1024 canvas (proportions scaled 1:1 here). -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2BA0F5"/>
+      <stop offset="55%" stop-color="#1F8AE4"/>
+      <stop offset="100%" stop-color="#1571C9"/>
+    </linearGradient>
+    <!-- Subtle top sheen, matching the upstream flat icon but with depth. -->
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.22"/>
+      <stop offset="45%" stop-color="#ffffff" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#0B1E33" flood-opacity="0.28"/>
+    </filter>
+    <clipPath id="body">
+      <rect x="100" y="100" width="824" height="824" rx="185" ry="185"/>
+    </clipPath>
+  </defs>
+
+  <rect x="100" y="100" width="824" height="824" rx="185" ry="185" fill="url(#bg)" filter="url(#shadow)"/>
+  <g clip-path="url(#body)">
+    <rect x="100" y="100" width="824" height="824" fill="url(#sheen)"/>
+  </g>
+
+  <!-- "KT" mark, traced from the upstream logotype's geometric construction:
+       a K of stem + two diagonals, and a T with a wide bar and long stem. -->
+  <g fill="#FFFFFF" fill-rule="evenodd">
+    <!-- K stem -->
+    <rect x="212" y="286" width="78" height="452" rx="30"/>
+    <!-- K upper diagonal -->
+    <path d="M300 512 L470 316 a40 40 0 0 1 60 53 L390 556 Z"/>
+    <!-- K lower diagonal -->
+    <path d="M300 512 L494 700 a40 40 0 0 1 -54 60 L300 594 Z"/>
+    <!-- T bar -->
+    <rect x="470" y="286" width="352" height="78" rx="30"/>
+    <!-- T stem -->
+    <rect x="607" y="286" width="78" height="452" rx="30"/>
+  </g>
+</svg>

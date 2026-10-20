@@ -1,0 +1,87 @@
+KISS Translator for Safari — GPL-3.0 derivative work notice
+===========================================================
+
+This repository packages the open-source browser extension "KISS Translator"
+as a native Safari Web Extension for macOS.
+
+1. Original work
+----------------
+  Title:      KISS Translator
+  Author:     fishjar (Gabe <yugang2002@gmail.com>)
+  Copyright:  Copyright (C) fishjar and the KISS Translator contributors
+  License:    GNU General Public License, version 3 (GPL-3.0)
+  Source:     https://github.com/fishjar/kiss-translator
+  License:    https://github.com/fishjar/kiss-translator/blob/master/LICENSE
+  Releases:   https://github.com/fishjar/kiss-translator/releases
+
+2. Pinned upstream revision
+---------------------------
+  Version:    2.1.1
+  Commit:     a1279f2517bd478ef1dd93b941f9177094486cd4
+  Toolchain:  Node.js >= 20, pnpm 9.14.4 (as pinned by upstream in .pnpm-version)
+
+  The exact revision above is recorded in config/build.config.mjs. All Safari
+  builds produced from this repository embed a compiled copy of the upstream
+  web-extension sources at that commit (MV3 manifest, background service
+  worker, content scripts, options/popup pages and bundled assets).
+
+3. Derivative work
+------------------
+  The native macOS wrapper in this repository — including the SwiftUI
+  container application, the Xcode project generator configuration, the build
+  and release tooling, and the packaging scripts — is a derivative work of
+  KISS Translator. It is licensed under the GNU General Public License,
+  version 3. The full text is in the LICENSE file at the root of this
+  repository, and it is identical to the upstream license.
+
+  Copyright (C) 2026 the KISS Translator for Safari packagers (ftzahao).
+
+4. Source availability (GPL-3.0, section 6)
+-------------------------------------------
+  Corresponding source for every binary distributed from this repository is
+  available at:
+
+    This repository:  https://github.com/ftzahao/kiss-translator-safari
+    Upstream source:  https://github.com/fishjar/kiss-translator
+                      (revision a1279f2517bd478ef1dd93b941f9177094486cd4,
+                       or the revision recorded in config/build.config.mjs for
+                       any later build)
+
+  The build is reproducible from a clean checkout with the commands documented
+  in README.md ("Build from source") and docs/BUILDING.md. No proprietary
+  components are added: the wrapper is small, contains no additional
+  translation logic, and is itself distributed under GPL-3.0.
+
+5. Modifications relative to upstream
+-------------------------------------
+  - The upstream sources are consumed unmodified at the pinned commit. Build
+    output is produced by upstream's own build tooling for the Safari target.
+  - A SwiftUI container app and Safari Web Extension host bundle
+    (com.ftzahao.kisstranslator / com.ftzahao.kisstranslator.extension) embed
+    the resulting extension bundle.
+  - Distribution packaging (DMG/ZIP), CI workflows and documentation are new.
+
+  None of these modifications change the translation behaviour of the
+  extension or remove any upstream functionality.
+
+6. No warranty
+--------------
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE.
+  See sections 15 and 16 of the GNU General Public License for the full
+  disclaimer.
+
+7. Trademarks and affiliation
+-----------------------------
+  This project is an unofficial, community-maintained packaging. It is not
+  affiliated with, endorsed by, or sponsored by the upstream author. The name
+  "KISS Translator", its logo and its icons remain the property of their
+  respective owners; they are used here only to identify the original work
+  that this distribution is derived from.
+
+  Donations and sponsorship for the original work should be directed to the
+  upstream author. This repository accepts none.
