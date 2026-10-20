@@ -227,6 +227,23 @@ struct OnboardingView: View {
 
     private var footer: some View {
         VStack(spacing: 10) {
+            if model.isAdHocSigned {
+                // Ad-hoc/unsigned builds are invisible to Safari no matter
+                // what the user does here; say so up front instead of letting
+                // them hunt for an extension that will never appear.
+                Label {
+                    Text(String(localized: "此构建未经开发者证书签名（ad-hoc），Safari 不会列出此扩展。如需实际启用，请用开发者证书重新构建。",
+                                comment: "Warning when the app is ad-hoc signed"))
+                        .fixedSize(horizontal: false, vertical: true)
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                }
+                .font(.caption)
+                .foregroundStyle(.orange)
+                .multilineTextAlignment(.leading)
+                .padding(.horizontal, 32)
+            }
+
             if let error = model.errorMessage {
                 Label(error, systemImage: "exclamationmark.triangle.fill")
                     .font(.caption)

@@ -16,6 +16,14 @@ separate version number.
   was never committed; the real release flow is `make all SIGNING=0` +
   the signing step in `.github/workflows/release.yml` + `make dmg SIGNING=0`.
   The docs now describe that path.
+- **"The file can't be found" when clicking the primary button.** The Safari
+  fallback launched `/System/Applications/Safari.app` by absolute path, but on
+  current macOS Safari ships as a Cryptex at
+  `/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app`, so
+  `NSWorkspace.openApplication(at:)` failed and macOS surfaced the error. Safari
+  is now resolved through Launch Services by bundle identifier
+  (`com.apple.Safari`), and a failure to reach it produces an in-window message
+  instead of a silent no-op.
 - **The app crashed on launch.** SafariServices answers
   `getStateOfSafariExtension` / `showPreferencesForExtension` on its own XPC
   queue, never on the main thread, but Swift 6 imports those reply signatures
@@ -38,8 +46,20 @@ separate version number.
   `make sign` signs the same way.
 - Release and CI workflows pinned Node 26 while `upstream.nodeMajor` is 20;
   both now use 20 so a clean runner cannot abort during `make extension`.
+- **An interrupted upstream fetch no longer poisons later builds.** A network
+  failure during `git fetch` left `.build/upstream-safari-raw/.git` without a
+  HEAD; the next run then died at `git rev-parse HEAD` instead of refetching.
+  The builder now treats a HEAD-less checkout as corrupt, wipes it and pulls
+  again.
 
 ### Added
+
+- **The onboarding window warns when the build cannot work.** Ad-hoc or
+  unsigned builds (CI artifacts, the published DMG before a Developer ID pass)
+  are invisible to Safari — the extension never appears in Settings →
+  Extensions no matter what the user does. The window now reads its own
+  Team Identifier at launch and, when it is missing, shows an orange notice
+  telling the user to rebuild with a developer certificate.
 
 - `com.apple.security.automation.apple-events` (with
   `NSAppleEventsUsageDescription`) and the Safari Extensions-pane fallback.

@@ -140,15 +140,24 @@ async function fetchUpstream() {
   const wantCommit = upstream.commit;
 
   if (await exists(path.join(UPSTREAM_DIR, ".git"))) {
-    const { stdout } = await sh("git", ["rev-parse", "HEAD"], { cwd: UPSTREAM_DIR });
-    if (stdout.trim() === wantCommit && !FORCE) {
+    // An interrupted fetch leaves a .git directory with no HEAD; `rev-parse`
+    // then fails. Treat that as "no usable checkout" so the stale-refetch
+    // path below wipes and re-fetches instead of aborting the build.
+    let current = null;
+    try {
+      const { stdout } = await sh("git", ["rev-parse", "HEAD"], { cwd: UPSTREAM_DIR });
+      current = stdout.trim();
+    } catch {
+      info("checkout is corrupt (no HEAD), refetching ...");
+    }
+    if (current === wantCommit && !FORCE) {
       ok(`checkout already at ${wantCommit.slice(0, 7)}`);
       return;
     }
-    info("checkout is stale, refetching ...");
+    if (current !== null) info("checkout is stale, refetching ...");
     if (OFFLINE) {
       throw new Error(
-        `--offline was requested but the checkout is at ${stdout.trim()}, not ${wantCommit}`
+        `--offline was requested but the checkout is at ${current}, not ${wantCommit}`
       );
     }
     await fs.rm(UPSTREAM_DIR, { recursive: true, force: true });

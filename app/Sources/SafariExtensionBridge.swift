@@ -133,39 +133,65 @@ enum SafariExtensionBridge {
             // No reply: at least land the user in Safari's extension pane.
             // This is the common case for ad-hoc signed or not-yet-approved
             // extensions, where the scoped call silently returns error 1.
-            openSafariExtensionSettings()
+            guard openSafariExtensionSettings() else {
+                return .failed(String(
+                    localized: "无法找到或打开 Safari。请手动打开 Safari 的「设置 › 扩展」并启用 KISS Translator。",
+                    comment: "Safari could not be located through Launch Services"
+                ))
+            }
             return .fellBackToSafari
         }
     }
 
+    /// Safari's bundle identifier, resolved through Launch Services.
+    static let safariBundleIdentifier = "com.apple.Safari"
+
     /// Opens Safari → Settings → Extensions (no specific extension).
     ///
     /// SafariServices exposes no "open the pane generically" API on macOS, so
-    /// this activates Safari and asks it, over Apple Events, to open its
-    /// preferences. It needs the `com.apple.security.automation.apple-events`
-    /// entitlement (declared in `KISSTranslator.entitlements`); if that is
-    /// denied the user still ends up in Safari, one click from the pane.
-    static func openSafariExtensionSettings() {
-        activateSafari()
+    /// this asks Safari, over Apple Events, to open its preferences. That needs
+    /// the `com.apple.security.automation.apple-events` entitlement (declared in
+    /// `KISSTranslator.entitlements`); if it is denied the user still ends up in
+    /// Safari, one click away from the pane.
+    ///
+    /// - Returns: `true` when Safari was reached (launched or activated).
+    @discardableResult
+    static func openSafariExtensionSettings() -> Bool {
+        let reachedSafari = activateSafari()
 
-        // Activate Safari first so the Apple Event targets a running app.
+        // `tell application "Safari"` also *launches* Safari when it is not
+        // running, so this is not merely best effort for the activation above.
         let script = """
         tell application "Safari"
             activate
             Open Preferences
         end tell
         """
-        // Best effort: if Apple Events are denied the user is still in Safari.
         var error: NSDictionary?
-        _ = NSAppleScript(source: script)?.executeAndReturnError(&error)
+        let ran = NSAppleScript(source: script)?.executeAndReturnError(&error) != nil
+        return reachedSafari || ran
     }
 
     /// Brings Safari forward, launching it when it is not running.
-    static func activateSafari() {
-        let safari = URL(fileURLWithPath: "/System/Applications/Safari.app")
+    ///
+    /// Resolved by bundle identifier on purpose. Hard-coding
+    /// `/System/Applications/Safari.app` is wrong on current macOS, where Safari
+    /// ships as a Cryptex at
+    /// `/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app`:
+    /// `openApplication(at:)` fails with "找不到该文件" and macOS shows that error
+    /// to the user.
+    ///
+    /// - Returns: `true` when Launch Services found Safari and the activation
+    ///   request was accepted.
+    @discardableResult
+    static func activateSafari() -> Bool {
+        guard let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: safariBundleIdentifier) else {
+            return false
+        }
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.activates = true
-        NSWorkspace.shared.openApplication(at: safari, configuration: configuration) { _, _ in }
+        NSWorkspace.shared.openApplication(at: appURL, configuration: configuration) { _, _ in }
+        return true
     }
 }
 

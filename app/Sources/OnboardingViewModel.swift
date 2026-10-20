@@ -24,6 +24,14 @@ final class OnboardingViewModel {
     var version: String { AppConfiguration.version }
     var build: String { AppConfiguration.build }
 
+    /// `true` when this build carries no real signing team (ad-hoc/unsigned).
+    ///
+    /// Safari silently omits such builds from Settings → Extensions, so the
+    /// onboarding must say so instead of letting the user chase a missing
+    /// extension. Computed from the bundle's signature, never cached across
+    /// launches — a re-signed copy relaunches with a different answer.
+    var isAdHocSigned: Bool { AppSignature.isAdHocOrUnsigned }
+
     // MARK: - Updates
 
     /// State of the update check, surfaced by the footer's update row.
