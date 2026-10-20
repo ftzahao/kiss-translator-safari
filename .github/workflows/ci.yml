@@ -24,7 +24,10 @@ env:
   # Must match upstream.pnpmVersion in config/build.config.mjs.
   # pnpm 10+ fails with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH against the upstream lockfile.
   PNPM_VERSION: "9.14.4"
-  NODE_VERSION: "26"
+  # Must match upstream.nodeMajor in config/build.config.mjs (currently 20).
+  # Do not bump this alone: the pin, this value and the README's minimum all
+  # have to move together, otherwise `make extension` aborts on a clean runner.
+  NODE_VERSION: "20"
   CODE_SIGN_IDENTITY: "-"
   CODE_SIGNING_REQUIRED: "NO"
   CODE_SIGNING_ALLOWED: "NO"

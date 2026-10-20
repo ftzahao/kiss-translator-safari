@@ -27,7 +27,8 @@ enum AppConfiguration {
     ///
     /// `SFSafariApplication.showPreferencesForExtension(withIdentifier:)` and
     /// `SFSafariExtensionManager.getStateOfSafariExtension(withIdentifier:)`
-    /// must receive *this* identifier, not the containing app's.
+    /// must receive *this* identifier, not the containing app's. Passing the
+    /// app's identifier makes both calls fail with `SFErrorDomain` error 1.
     static let extensionBundleIdentifier = "com.ftzahao.kisstranslator.extension"
 
     /// Upstream open-source project.

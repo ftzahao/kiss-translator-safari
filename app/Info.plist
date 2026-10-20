@@ -34,5 +34,7 @@
 	<string>NSApplication</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>KISS Translator uses automation to tell Safari to open its Extensions settings so the add-on can be enabled.</string>
 </dict>
 </plist>

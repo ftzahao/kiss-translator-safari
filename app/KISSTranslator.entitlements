@@ -6,5 +6,11 @@
 	<true/>
 	<key>com.apple.security.network.client</key>
 	<true/>
+	<!-- Lets the onboarding window ask Safari (over Apple Events) to open
+	     Settings › Extensions when SafariServices refuses the scoped
+	     showPreferencesForExtension call. Without it the sandbox denies the Apple
+	     Event and the primary button appears to do nothing. -->
+	<key>com.apple.security.automation.apple-events</key>
+	<true/>
 </dict>
 </plist>

@@ -7,6 +7,51 @@ and this project adheres to the version number of the upstream KISS Translator
 release it packages. Packaging-only changes are recorded here but do not get a
 separate version number.
 
+## [Unreleased]
+
+### Fixed
+
+- **The app crashed on launch.** SafariServices answers
+  `getStateOfSafariExtension` / `showPreferencesForExtension` on its own XPC
+  queue, never on the main thread, but Swift 6 imports those reply signatures
+  as `@MainActor`, so the reply thunk asserted the main queue and trapped
+  (`EXC_BREAKPOINT`, `dispatch_assert_queue_fail` in
+  `SafariExtensionBridge.state(of:)`). The window therefore showed a stale
+  "无法获取状态" badge and every button was dead — the process was already gone.
+  `SafariExtensionBridge` now creates all reply handlers in non-isolated free
+  functions and bounds each call with a 5 s timeout.
+- **The primary button now always does something.** When SafariServices
+  refuses the extension-scoped call (typical for an ad-hoc signed build), the
+  app falls back to opening Safari's Extensions pane over Apple Events and, if
+  even that is denied, shows a concrete message instead of the raw
+  "SFErrorDomain 错误 1".
+- **The app is no longer built without entitlements.** An ad-hoc
+  `codesign --sign -` on a sandboxed bundle drops its entitlements unless they
+  are passed explicitly; the release workflow now signs inside-out
+  (appex executable → appex → app) with `--entitlements` and *fails* the job
+  if the app sandbox or Apple Events entitlement is missing afterwards.
+  `make sign` signs the same way.
+- Release and CI workflows pinned Node 26 while `upstream.nodeMajor` is 20;
+  both now use 20 so a clean runner cannot abort during `make extension`.
+
+### Added
+
+- `com.apple.security.automation.apple-events` (with
+  `NSAppleEventsUsageDescription`) and the Safari Extensions-pane fallback.
+- macOS 26 Liquid Glass: the app is built with the macOS 26 SDK (Xcode 26+,
+  `DTSDKName = macosx26/27`) and no longer forces an opaque background, so the
+  window picks up the system glass material. Builds made with an older SDK
+  keep the classic appearance — see `docs/BUILDING.md`.
+- Onboarding window layout constants (`app/Sources/Design.swift`); the
+  unbounded spacer that left a large empty band above the primary button is
+  gone, and the update sheet no longer grows past the screen for long notes.
+- `docs/BUILDING.md` troubleshooting entries for both failure modes above.
+
+### Changed
+
+- The failure badge reads "Safari 未能确认扩展" and explains what to do, instead
+  of the misleading "无法获取状态".
+
 ## [0.1.0] - 2026-10-20
 
 Initial release: KISS Translator 2.1.1 packaged as a native Safari Web Extension
@@ -42,4 +87,5 @@ for macOS.
 - Upstream feature availability differs by Safari; file translation and
   on-device AI features may be limited.
 
+[Unreleased]: https://github.com/ftzahao/kiss-translator-safari/compare/v2.1.1...HEAD
 [0.1.0]: https://github.com/ftzahao/kiss-translator-safari/releases/tag/v2.1.1

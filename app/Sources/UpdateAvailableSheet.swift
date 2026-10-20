@@ -32,7 +32,10 @@ struct UpdateAvailableSheet: View {
             actions
         }
         .frame(width: 460)
-        .fixedSize(horizontal: false, vertical: true)
+        // NOT `.fixedSize(vertical: true)` here: release notes are unbounded
+        // text, and a fixed vertical size lets the sheet grow past the screen.
+        // The notes scroll inside `notes` instead.
+        .frame(maxHeight: 420)
     }
 
     // MARK: - Sections

@@ -38,7 +38,10 @@ env:
   # Upstream pins pnpm 9.14.4 (see config/build.config.mjs -> upstream.pnpmVersion).
   # pnpm 10+ fails with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH against the upstream lockfile.
   PNPM_VERSION: "9.14.4"
-  NODE_VERSION: "26"
+  # Must match upstream.nodeMajor in config/build.config.mjs (currently 20).
+  # Do not bump this alone: the pin, this value and the README's minimum all
+  # have to move together, otherwise `make extension` aborts on a clean runner.
+  NODE_VERSION: "20"
   # Unsigned / ad-hoc build flags shared by `make` and raw `xcodebuild` invocations.
   CODE_SIGN_IDENTITY: "-"
   CODE_SIGNING_REQUIRED: "NO"
@@ -101,12 +104,43 @@ jobs:
         # does not require the owner's Developer ID; it only lets the app run once the
         # quarantine flag is cleared by the user. It does NOT satisfy Gatekeeper
         # verification and is NOT notarized.
+        #
+        # Signed INSIDE-OUT (appex executable -> appex bundle -> app), because
+        # `codesign --deep` on the outer bundle alone leaves the nested appex with
+        # an inconsistent signature and Safari then cannot verify the appex.
+        # The entitlement checks below are release blockers on purpose.
         run: |
+          set -euo pipefail
           APP="build/App/KISSTranslator.app"
+          APPEX="${APP}/Contents/PlugIns/KISSTranslator Extension.appex"
           test -d "${APP}" || { echo "::error::${APP} not found"; exit 1; }
-          codesign --force --deep --sign - "${APP}"
-          codesign --verify --deep --strict --verbose=2 "${APP}" || \
-            echo "::warning::codesign verification reported issues (expected for ad-hoc signing)"
+          test -d "${APPEX}" || { echo "::error::${APPEX} not found"; exit 1; }
+          xattr -cr "${APP}"
+          # `--entitlements` is mandatory: an ad-hoc `codesign --sign -` on a
+          # sandboxed bundle DROPS the entitlements (verified locally), leaving the
+          # app unable to read the Safari extension state or send Apple Events.
+          codesign --force --sign - "${APPEX}/Contents/MacOS/KISSTranslator Extension"
+          codesign --force --sign - --entitlements extension/KISSTranslatorExtension.entitlements "${APPEX}"
+          codesign --force --sign - --entitlements app/KISSTranslator.entitlements "${APP}"
+          codesign --verify --strict --verbose=2 "${APP}"
+          codesign --verify --strict --verbose=2 "${APPEX}"
+          # Strings are captured first, then matched: `codesign -d | grep -q` under
+          # `pipefail` dies of SIGPIPE (141) because grep -q exits early.
+          rests() { codesign -d --entitlements - "$1" 2>&1 || true; }
+          APP_ENTS="$(rests "${APP}")"
+          APPEX_ENTS="$(rests "${APPEX}")"
+          grep -c "app-sandbox" <<<"${APPEX_ENTS}" >/dev/null \
+            || { echo "::error::${APPEX} lost its entitlements while signing"; exit 1; }
+          grep -c "app-sandbox" <<<"${APP_ENTS}" >/dev/null \
+            || { echo "::error::${APP} lost its entitlements while signing"; exit 1; }
+          grep -c "com.apple.security.automation.apple-events" <<<"${APP_ENTS}" >/dev/null \
+            || { echo "::error::the app lost com.apple.security.automation.apple-events"; exit 1; }
+          # Hard requirement, not a warning: fail the job instead of shipping an
+          # .appex whose signature does not carry the extension identifier.
+          APPEX_INFO="$(codesign -dv --verbose=4 "${APPEX}" 2>&1 || true)"
+          grep -c "Identifier=com.ftzahao.kisstranslator.extension" <<<"${APPEX_INFO}" >/dev/null \
+            || { echo "::error::appex signature does not carry the extension identifier"; echo "${APPEX_INFO}"; exit 1; }
+          lipo -info "${APP}/Contents/MacOS/KISSTranslator" || true
           spctl --assess --type execute -vv "${APP}" || true
 
       - name: Create DMG and ZIP

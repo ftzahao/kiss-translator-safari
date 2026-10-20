@@ -100,6 +100,10 @@ final class OnboardingViewModel {
     }
 
     /// Refreshes `status` from Safari.
+    ///
+    /// Safe to call from `.task` at launch: `SafariExtensionBridge` never traps
+    /// when Safari replies from its XPC queue, and every call is bounded by a
+    /// timeout, so the badge can only end up in a definite state.
     func refreshStatus() async {
         status = await SafariExtensionBridge.state()
         // The status is rarely a "hard" failure even when the extension is
@@ -112,18 +116,35 @@ final class OnboardingViewModel {
     /// Opens Safari's extension preferences. On success the onboarding window
     /// terminates the app, matching Apple's template behaviour, so that the
     /// user lands directly in Safari.
+    ///
+    /// `Button` actions run inside a SwiftUI `Task`, and an uncaught error or a
+    /// hang there is invisible to the user (the button simply looks "dead").
+    /// Every outcome therefore maps to either a visible message or a
+    /// navigation away from this window.
     func openSafariExtensionPreferences() async {
         guard !isOpeningPreferences else { return }
         isOpeningPreferences = true
         defer { isOpeningPreferences = false }
-
-        if let failure = await SafariExtensionBridge.showPreferences(for: AppConfiguration.extensionBundleIdentifier) {
-            errorMessage = failure
-            // Refresh so the badge reflects reality (e.g. extension removed).
-            await refreshStatus()
-            return
-        }
         errorMessage = nil
-        NSApp.terminate(nil)
+
+        let result = await SafariExtensionBridge.openPreferences(for: AppConfiguration.extensionBundleIdentifier)
+        switch result {
+        case .opened, .fellBackToSafari:
+            NSApp.terminate(nil)
+        case .failed(let message):
+            errorMessage = message
+            // Make sure *something* is on screen even if Safari never appeared.
+            SafariExtensionBridge.activateSafari()
+            await refreshStatus()
+        }
+    }
+
+    /// Re-queries Safari and, when Safari cannot answer, clears the stale
+    /// message so the "重新检查状态" link stays responsive.
+    func recheck() async {
+        if case .failed = status {
+            status = .unknown
+        }
+        await refreshStatus()
     }
 }

@@ -18,8 +18,8 @@ Detailed build reference. For the short version, see the README
 | Tool | Version | Check |
 | --- | --- | --- |
 | macOS | 14.0+ | `sw_vers -productVersion` |
-| Xcode | 16+ | `xcodebuild -version` |
-| Node.js | 20+ | `node --version` |
+| Xcode | 16+ (26+ for the Liquid Glass appearance) | `xcodebuild -version` |
+| Node.js | 20 (matches `upstream.nodeMajor`) | `node --version` |
 | pnpm | **9.14.4 exactly** | `pnpm --version` |
 | XcodeGen | latest | `xcodegen --version` |
 
@@ -112,9 +112,14 @@ Three modes:
 
 1. **Unsigned** — `SIGNING=0` (CI). Produces a runnable app only after the user
    clears quarantine.
-2. **Ad-hoc** — `codesign --force --deep --sign - build/App/KISSTranslator.app`.
-   This is what the release workflow does after the unsigned build. It satisfies
-   the code-signing requirement but not Gatekeeper.
+2. **Ad-hoc** — sign inside-out (appex executable → appex → app), always with
+   `--entitlements`, e.g.
+   `codesign --force --sign - --entitlements app/KISSTranslator.entitlements build/App/KISSTranslator.app`.
+   This is what the release workflow does after the unsigned build. Two traps:
+   an ad-hoc `codesign --sign -` on a sandboxed bundle **drops its entitlements**
+   unless they are passed again, and `--deep` on the outer bundle alone leaves
+   the nested `.appex` inconsistently signed. It satisfies the code-signing
+   requirement but not Gatekeeper.
 3. **Real signing** — `make sign` with your own identity, e.g.
    `DEVELOPER_ID="Developer ID Application: Your Name (TEAMID)" make sign`.
    Developer ID signing plus notarization needs a paid Apple Developer Program
@@ -160,9 +165,6 @@ mismatch rather than publishing a mislabelled build.
 
 ## Troubleshooting
 
-**`ERR_PNPM_LOCKFILE_CONFIG_MISMATCH`**
-You are on pnpm 10+. Run `pnpm --version`; install 9.14.4 via corepack.
-
 **`xcodegen: command not found`**
 `brew install xcodegen`. CI does this conditionally with
 `command -v xcodegen || brew install xcodegen`.
@@ -185,6 +187,38 @@ a properly signed build.
 **App is "damaged" or cannot be opened after downloading**
 Quarantine attribute. Either right-click → Open, or
 `xattr -dr com.apple.quarantine "/Applications/KISS Translator.app"`.
+
+**Onboarding window: badge shows "无法获取状态" / the primary button does nothing**
+
+Two independent causes, both fixed in this repository after the 2.1.1
+download — check which one you have before rebuilding:
+
+1. *The app crashes on launch.* SafariServices replies on its own XPC queue
+   (`com.apple.NSXPCConnection.user.com.apple.SafariServices.ExtensionHelper`),
+   never on the main thread. The Swift 6 importer presents those reply
+   signatures as `@MainActor`, so a reply handler written in actor context
+   traps with `EXC_BREAKPOINT` / `dispatch_assert_queue_fail` in
+   `SafariExtensionBridge.state(of:)`. Check
+   `~/Library/Logs/DiagnosticReports/KISSTranslator-*.ips`: if it exists, the
+   process died and there is nothing left to click. `SafariExtensionBridge`
+   now creates every reply handler in a non-isolated free function and bounds
+   each call with a 5 s timeout; never write a reply closure inside
+   `@MainActor` code.
+2. *The extension is not registered with Safari.* `showPreferencesForExtension`
+   answers `SFErrorDomain` error 1 when Safari does not know the extension —
+   typical for ad-hoc signed builds. Safari never lists ad-hoc extensions, and
+   the window now falls back to Safari's Extensions pane and says so.
+
+**The UI is not Liquid Glass on macOS 26+**
+
+The appearance is baked in at compile time: the app opts in by being built
+with the macOS 26 SDK (Xcode 26+). A build produced with an older SDK keeps the
+pre-26 look regardless of the runtime macOS version. Verify what a download
+contains with
+`plutil -p "/Applications/KISS Translator.app/Contents/Info.plist" | grep -i DTSDKName`.
+
+**`ERR_PNPM_LOCKFILE_CONFIG_MISMATCH`**
+You are on pnpm 10+. Run `pnpm --version`; install 9.14.4 via corepack.
 
 **Build is extremely slow on the first run**
 `make deps` installs the full upstream dependency tree; subsequent runs reuse

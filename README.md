@@ -97,7 +97,7 @@ macOS blocks them on first launch until you clear the quarantine flag.
 | Tool | Version |
 | --- | --- |
 | macOS | 14 (Sonoma) or later |
-| Xcode | 16 or later (command line tools selected via `xcode-select`) |
+| Xcode | 16 or later (command line tools selected via `xcode-select`); Xcode 26+ for the Liquid Glass appearance |
 | Node.js | 20 or later |
 | pnpm | **9.14.4** — exactly. pnpm 10+ fails with `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH` |
 | XcodeGen | latest (`brew install xcodegen`) |
@@ -162,7 +162,8 @@ rights) also enables the automation-related developer settings and is a useful d
 | OS | macOS 14 Sonoma or later |
 | Browser | Safari 17 or later |
 | Architecture | Universal binary — Apple Silicon (`arm64`) and Intel (`x86_64`) |
-| Build tooling | Xcode 16+, Node 20+, pnpm 9.14.4, XcodeGen |
+| Build tooling | Xcode 16+, Node 20+ (matches `upstream.nodeMajor`), pnpm 9.14.4, XcodeGen |
+| Appearance | Liquid Glass on macOS 26+ when built with the macOS 26 SDK (Xcode 26+); classic appearance otherwise |
 | iOS / iPadOS | Not supported yet |
 
 ---

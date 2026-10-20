@@ -117,7 +117,18 @@ sign:
 		exit 1; \
 	fi
 	@echo "==> Signing with $(DEVELOPER_ID)"
-	@codesign --force --options runtime --timestamp --sign "$(DEVELOPER_ID)" "$(APP)"
+	@# Inside-out: nested appex executable -> appex bundle -> app. Never
+	@# `codesign --deep` the outer bundle only: that leaves the extension with an
+	@# inconsistent signature and Safari then cannot verify/load it.
+	@codesign --force --options runtime --timestamp --sign "$(DEVELOPER_ID)" \
+		"$(APP)/Contents/PlugIns/KISSTranslator Extension.appex/Contents/MacOS/KISSTranslator Extension"
+	@codesign --force --options runtime --timestamp --sign "$(DEVELOPER_ID)" \
+		--entitlements extension/KISSTranslatorExtension.entitlements \
+		"$(APP)/Contents/PlugIns/KISSTranslator Extension.appex"
+	@codesign --force --options runtime --timestamp --sign "$(DEVELOPER_ID)" \
+		--entitlements app/KISSTranslator.entitlements "$(APP)"
+	@# An ad-hoc `--sign -` (identity "-") drops entitlements unless they are
+	@# passed explicitly; verify they survived instead of trusting the tool.
 	@codesign --verify --deep --strict --verbose=2 "$(APP)"
 	@echo "==> Signed"
 

@@ -88,7 +88,7 @@ Safari 版本。遇到疑问时请以对应上游版本的发布说明为准。
 | 工具 | 版本 |
 | --- | --- |
 | macOS | 14 (Sonoma) 或更高 |
-| Xcode | 16 或更高（已通过 `xcode-select` 选中命令行工具） |
+| Xcode | 16 或更高（已通过 `xcode-select` 选中命令行工具）；要启用液态玻璃外观需 Xcode 26+ |
 | Node.js | 20 或更高 |
 | pnpm | **9.14.4**，必须是这个版本。pnpm 10+ 会因 `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH` 失败 |
 | XcodeGen | 最新版（`brew install xcodegen`） |
@@ -148,7 +148,8 @@ open KISSTranslator.xcodeproj
 | 系统 | macOS 14 Sonoma 或更高 |
 | 浏览器 | Safari 17 或更高 |
 | 架构 | 通用二进制：Apple Silicon（`arm64`）与 Intel（`x86_64`） |
-| 构建工具 | Xcode 16+、Node 20+、pnpm 9.14.4、XcodeGen |
+| 构建工具 | Xcode 16+、Node 20+（与 `upstream.nodeMajor` 一致）、pnpm 9.14.4、XcodeGen |
+| 外观 | 用 macOS 26 SDK（Xcode 26+）构建时，在 macOS 26+ 上启用液态玻璃（Liquid Glass）；否则为经典外观 |
 | iOS / iPadOS | 暂不支持 |
 
 ---

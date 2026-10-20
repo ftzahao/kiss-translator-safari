@@ -15,18 +15,17 @@ struct OnboardingView: View {
     /// The update currently being described in an alert, if any.
     @State private var presentedUpdate: UpdateRelease?
 
-    private let windowWidth: CGFloat = 520
-    private let windowHeight: CGFloat = 600
+    private let windowWidth = OnboardingLayout.width
+    private let windowHeight = OnboardingLayout.height
 
     var body: some View {
         VStack(spacing: 0) {
             header
             instructions
-            Spacer(minLength: 12)
             footer
         }
         .frame(width: windowWidth, height: windowHeight)
-        .background(.background)
+        .background(contentBackground)
         .task {
             await model.refreshStatus()
             // Convenience check; quiet on failure and never blocks the UI.
@@ -118,6 +117,22 @@ struct OnboardingView: View {
         return image
     }()
 
+    /// Window background.
+    ///
+    /// On the macOS 26 SDK the window opts into Liquid Glass, so the content
+    /// is drawn on the system window material instead of an opaque fill. On
+    /// older SDKs the classic solid background is kept.
+    @ViewBuilder
+    private var contentBackground: some View {
+        if Design.usesLiquidGlass {
+            Rectangle()
+                .fill(.clear)
+        } else {
+            Rectangle()
+                .fill(.background)
+        }
+    }
+
     private var statusBadge: some View {
         HStack(spacing: 6) {
             Circle()
@@ -140,7 +155,9 @@ struct OnboardingView: View {
         case .unknown: String(localized: "正在检查扩展状态…", comment: "Status: checking")
         case .enabled: String(localized: "已启用", comment: "Status: enabled")
         case .disabled: String(localized: "未启用", comment: "Status: disabled")
-        case .failed: String(localized: "无法获取状态", comment: "Status: query failed")
+        // Not "无法获取状态": 2.1.1 crashed before it could ever answer, so that
+        // badge was static. This one only appears when Safari genuinely declines.
+        case .failed: String(localized: "Safari 未能确认扩展", comment: "Status: Safari could not confirm the extension")
         }
     }
 
@@ -209,7 +226,7 @@ struct OnboardingView: View {
     // MARK: - Footer
 
     private var footer: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
             if let error = model.errorMessage {
                 Label(error, systemImage: "exclamationmark.triangle.fill")
                     .font(.caption)
@@ -217,6 +234,7 @@ struct OnboardingView: View {
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, 32)
+                    .textSelection(.enabled)
             }
 
             Button {
@@ -243,10 +261,12 @@ struct OnboardingView: View {
 
             if !model.status.isEnabled {
                 Button(String(localized: "重新检查状态", comment: "Refresh status button")) {
-                    Task { await model.refreshStatus() }
+                    Task { await model.recheck() }
                 }
                 .buttonStyle(.link)
                 .font(.caption)
+                .disabled(model.isOpeningPreferences)
+                .help(String(localized: "重新向 Safari 查询扩展状态", comment: "Recheck status tooltip"))
             }
 
             Divider()
@@ -260,6 +280,7 @@ struct OnboardingView: View {
 
             versionRow
         }
+        .padding(.top, 8)
         .padding(.bottom, 20)
     }
 
