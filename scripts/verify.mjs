@@ -167,12 +167,32 @@ async function main() {
   }
 
   // -------------------------------------------------------------- signing
+  // Safari will not list an extension whose host app has no real Team
+  // Identifier; it logs "Computing the code signing dictionary failed" and
+  // silently omits the entry from Settings > Extensions. Ad-hoc and unsigned
+  // builds are therefore only fit for CI sanity checks, never for local use.
+  const appTeam = await teamIdentifier(APP);
+  const extTeam = await teamIdentifier(path.join(appex));
   try {
     await run("codesign", ["-v", "--deep", "--strict", APP]);
     ok("code signature verifies");
   } catch {
     notes.push(
       "code signature does not verify — expected for an unsigned CI build before ad-hoc signing"
+    );
+  }
+
+  if (appTeam && extTeam) {
+    check(
+      appTeam === extTeam,
+      `app and extension are signed by the same team (${appTeam})`
+    );
+    ok("Safari will accept this build");
+  } else {
+    notes.push(
+      "NOT signed with a real Team Identifier — Safari will not list this " +
+        "extension. Rebuild with `make build DEVELOPMENT_TEAM=<TEAMID>` " +
+        "(or DEVELOPER_ID=\"Developer ID Application: …\") to test locally."
     );
   }
 
@@ -199,6 +219,25 @@ async function dirSize(dir) {
     else total += (await fs.stat(p)).size;
   }
   return total;
+}
+
+/**
+ * Returns the Team Identifier codesign recorded for a bundle, or null when the
+ * bundle is unsigned or ad-hoc signed (both report "not set").
+ */
+async function teamIdentifier(bundlePath) {
+  try {
+    const { stdout, stderr } = await run("codesign", ["-dv", bundlePath], {
+      // `codesign -d` writes its report to stderr.
+      reject: false,
+    });
+    const report = `${stdout}\n${stderr}`;
+    const match = report.match(/TeamIdentifier=(\S+)/);
+    if (!match || match[1] === "not" || match[1] === "set") return null;
+    return match[1];
+  } catch {
+    return null;
+  }
 }
 
 main().catch((err) => {
