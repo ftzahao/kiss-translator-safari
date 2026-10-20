@@ -38,7 +38,7 @@ env:
   # Upstream pins pnpm 9.14.4 (see config/build.config.mjs -> upstream.pnpmVersion).
   # pnpm 10+ fails with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH against the upstream lockfile.
   PNPM_VERSION: "9.14.4"
-  NODE_VERSION: "22"
+  NODE_VERSION: "26"
   # Unsigned / ad-hoc build flags shared by `make` and raw `xcodebuild` invocations.
   CODE_SIGN_IDENTITY: "-"
   CODE_SIGNING_REQUIRED: "NO"
