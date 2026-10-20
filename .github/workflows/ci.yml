@@ -68,25 +68,17 @@ jobs:
       - name: Build web extension
         run: make extension
 
-      - name: Generate Xcode project
-        run: make project
-
       - name: Build app (strict, unsigned)
+        # `make build` regenerates the project, runs xcodebuild, and stages the
+        # product at build/App/KISSTranslator.app — the same path release.yml and
+        # scripts/package.mjs consume. Do NOT call xcodebuild directly here: that
+        # leaves the app only in build/DerivedData/Build/Products/Release, and
+        # the assertion step below (which checks the staged bundle) then fails
+        # with "build/App/KISSTranslator.app missing" even though the build
+        # succeeded.
         run: |
-          set -o pipefail
           mkdir -p build/logs
-          # Same flags as `make build SIGNING=0`, spelled out explicitly so CI fails
-          # fast if the generated project changes scheme/target names.
-          xcodebuild \
-            -project KISSTranslator.xcodeproj \
-            -scheme KISSTranslator \
-            -configuration Release \
-            -derivedDataPath build/DerivedData \
-            CODE_SIGN_IDENTITY=- \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            build CODE_SIGNING_ALLOWED=NO \
-            2>&1 | tee build/logs/xcodebuild.log
+          make build SIGNING=0 2>&1 | tee build/logs/xcodebuild.log
 
       - name: Assert app bundle and embedded extension
         run: |
@@ -94,7 +86,16 @@ jobs:
           APP="build/App/KISSTranslator.app"
           APPEX_NAMES=("KISSTranslator Extension.appex" "KISSTranslatorExtension.appex" "KISSTranslator.appex")
 
-          test -d "${APP}" || { echo "::error::${APP} missing"; find build -maxdepth 3 -name '*.app' -print; exit 1; }
+          test -d "${APP}" || {
+            echo "::error::${APP} missing"
+            # Distinguish "the build never staged the product" from "the product
+            # is there but under a different path", so this failure is actionable.
+            if [[ -d "build/DerivedData/Build/Products/Release/KISSTranslator.app" ]]; then
+              echo "::error::xcodebuild succeeded but nothing staged the product at ${APP}; build via 'make build SIGNING=0' instead of calling xcodebuild directly."
+            fi
+            find build -maxdepth 4 -name '*.app' -print 2>/dev/null || true
+            exit 1
+          }
 
           APPEX=""
           for name in "${APPEX_NAMES[@]}"; do

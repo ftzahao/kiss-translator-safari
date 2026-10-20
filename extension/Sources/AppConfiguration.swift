@@ -36,6 +36,16 @@ enum AppConfiguration {
     /// This wrapper project.
     static let projectURL = URL(string: "https://github.com/ftzahao/kiss-translator-safari")!
 
+    /// Repository whose GitHub Releases are checked for updates, as
+    /// `owner/name`. The update checker queries
+    /// `https://api.github.com/repos/<this>/releases/latest`.
+    static let updatesRepository = "ftzahao/kiss-translator-safari"
+
+    /// All releases, for the "查看全部版本" link.
+    static var releasesPageURL: URL {
+        URL(string: "https://github.com/\(updatesRepository)/releases")!
+    }
+
     /// Upstream license (GPL-3.0).
     static let licenseURL = URL(string: "https://www.gnu.org/licenses/gpl-3.0.html")!
 
