@@ -210,6 +210,22 @@ Key points:
 
 ---
 
+## Updating the app
+
+On launch the app queries GitHub Releases once and, when a newer version exists,
+shows an "Update to x.y.z" badge next to the version label. Clicking it opens a
+sheet with the release notes and a download link.
+
+Updates are not installed automatically: releases are unsigned, so replacing the
+running app would be refused by Gatekeeper. Download the DMG, drag the app into
+Applications to replace the old copy, and your extension settings (translation
+providers, site rules, …) are preserved.
+
+A failed check (offline, no releases published yet) stays out of the way and only
+offers a "Check for Updates" retry link.
+
+---
+
 ## Updating upstream
 
 The upstream pin lives in `config/build.config.mjs`:
