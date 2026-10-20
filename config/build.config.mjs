@@ -13,12 +13,12 @@ export const upstream = {
   // Pinned upstream release. Bump this (and run `make verify`) to upgrade.
   version: "2.1.1",
   // Commit SHA resolved for the tag above. Verified at fetch time.
-  commit: "a1279f2517bd478ef1dd93b941f9177094486cd4",
+  commit: "aa70b16e4c5e2d2f6fb32f3148ded54c4cd872cd",
   // The exact pnpm version upstream pins in .pnpm-version. Using a different
   // major (e.g. pnpm 10+) fails with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
   pnpmVersion: "9.14.4",
   // Minimum Node.js major that can build upstream.
-  nodeMajor: 20,
+  nodeMajor: 26,
 };
 
 export const app = {
