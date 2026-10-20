@@ -221,8 +221,17 @@ jobs:
             > **This build is UNSIGNED and NOT NOTARIZED.** macOS will warn that the app
             > "cannot be opened because the developer cannot be verified". The app is
             > ad-hoc signed and will run normally once you clear the quarantine flag.
+            >
+            > **The extension cannot be enabled from this build.** Safari only lists
+            > extensions whose containing app is signed with a real Team Identifier
+            > (Apple Development or Developer ID); an ad-hoc signature is silently
+            > omitted from **Safari → Settings → Extensions**. This DMG lets you run the
+            > app and see the onboarding UI, but a working extension requires building
+            > from source with your own certificate (see below). Newer onboarding builds
+            > detect this and show a warning instead of leaving you hunting for a missing
+            > extension.
 
-            ### Install
+            ### Install (onboarding UI only)
 
             1. Download `KISSTranslator-${{ steps.version.outputs.value }}.dmg` (verify it against `checksums.txt`).
             2. Open the DMG and drag **KISS Translator.app** into `/Applications`.
@@ -232,11 +241,24 @@ jobs:
                  ```sh
                  xattr -dr com.apple.quarantine "/Applications/KISS Translator.app"
                  ```
-            4. Launch the app once. It only explains how to enable the extension.
-            5. **Safari → Settings → Extensions** → enable **KISS Translator**.
-            6. Grant the extension access to the websites you want translated
-               (manage per-site permissions in the same Extensions pane), or choose
-               "Always Allow on Every Website" if you prefer.
+            4. Launch the app. It explains how to enable the extension; with this ad-hoc
+               build it also warns that Safari will not list it.
+
+            ### Actually using the extension
+
+            Build from source with a real signing team — an Apple Development certificate
+            is enough for use on your own Mac:
+
+            ```sh
+            git clone https://github.com/ftzahao/kiss-translator-safari
+            cd kiss-translator-safari
+            make all DEVELOPMENT_TEAM=<YOUR_TEAM_ID>
+            ```
+
+            Launch `build/App/KISSTranslator.app` once (this registers the extension),
+            then enable **KISS Translator** in **Safari → Settings → Extensions** and
+            grant it access to the websites you want translated (manage per-site
+            permissions in the same pane, or choose "Always Allow on Every Website").
 
             ### Verify the download
 
@@ -250,7 +272,8 @@ jobs:
               (`config/build.config.mjs`). Upstream project: https://github.com/fishjar/kiss-translator
             - This is an unofficial, community-packaged derivative work distributed under
               GPL-3.0. Please report packaging issues here, and extension (JS) issues upstream.
-            - Xcode / Safari versions are not required to install this build.
+            - Xcode / Safari versions are not required to run the app from this DMG;
+              building from source requires Xcode 26+ (see `docs/BUILDING.md`).
 
   # ---------------------------------------------------------------------------
   # Secondary job: .zip containing the .appex, laid out for App Store Connect.
