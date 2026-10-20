@@ -117,7 +117,8 @@ make all         # 扩展 → Xcode 工程 → 通用二进制 App → DMG + ZIP
 | `make verify` | 校验锁定的上游版本/提交以及产物完整性 |
 | `make clean` | 清理构建产物 |
 
-`scripts/release.mjs` 负责串联完整发布流程（升版本、生成发布说明、收集产物），CI 用的也是它。
+发布流程就是 CI 用的那两步：`make all SIGNING=0` 再加 `make dmg SIGNING=0`，没有单独的发布脚本。详见
+[发版](docs/BUILDING.md#releasing)。
 
 ### (c) 在 Xcode 中调试
 

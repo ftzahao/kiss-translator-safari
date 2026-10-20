@@ -11,6 +11,11 @@ separate version number.
 
 ### Fixed
 
+- **The advertised build orchestrator `scripts/release.mjs` did not exist.** The
+  README, `docs/BUILDING.md` and the `[0.1.0]` notes referred to a script that
+  was never committed; the real release flow is `make all SIGNING=0` +
+  the signing step in `.github/workflows/release.yml` + `make dmg SIGNING=0`.
+  The docs now describe that path.
 - **The app crashed on launch.** SafariServices answers
   `getStateOfSafariExtension` / `showPreferencesForExtension` on its own XPC
   queue, never on the main thread, but Swift 6 imports those reply signatures
@@ -49,6 +54,15 @@ separate version number.
 
 ### Changed
 
+- **CI and release now build on `macos-26` instead of `macos-15`.** This is what
+  actually makes the Liquid Glass entry above reach users: the appearance is
+  opted into at compile time, and the `macos-15` image only ships Xcode 16
+  (macOS 15 SDK), so every artifact built there kept the pre-26 look no matter
+  which macOS the user runs. `macos-26` defaults to Xcode 26.x (macOS 26 SDK).
+  There is no `macos-27` runner label yet (`xcode-27` is a preview image), so
+  `macos-26` is the newest GA image. The release workflow now also asserts at
+  build time that the macOS SDK is 26 or newer and fails instead of silently
+  publishing a build without the glass treatment.
 - The failure badge reads "Safari 未能确认扩展" and explains what to do, instead
   of the misleading "无法获取状态".
 

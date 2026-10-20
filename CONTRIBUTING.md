@@ -88,9 +88,11 @@ Before opening a pull request, please make sure:
 See [docs/BUILDING.md](docs/BUILDING.md) for target-by-target details and
 troubleshooting.
 
-CI (`.github/workflows/ci.yml`) runs the same unsigned build on `macos-15` and
+CI (`.github/workflows/ci.yml`) runs the same unsigned build on `macos-26` and
 asserts that the built `.app` contains the `.appex` with a valid
-`manifest.json`. A red CI run will not be merged.
+`manifest.json`. `macos-26` (default Xcode 26.x) is required because the Liquid
+Glass appearance on macOS 26+ needs a build against the macOS 26 SDK; a
+`macos-15` runner only has Xcode 16. A red CI run will not be merged.
 
 ## What this repository does and does not do
 

@@ -126,8 +126,8 @@ Individual targets are available if you want to stop halfway:
 | `make verify` | Verify the pinned upstream version/commit and the produced bundle |
 | `make clean` | Remove build outputs |
 
-`scripts/release.mjs` orchestrates the full pipeline (version bumping, release notes, and
-artifact collection) and is what CI uses.
+`make all SIGNING=0` followed by `make dmg SIGNING=0` is the release path CI uses;
+there is no separate release script. See [Releasing](docs/BUILDING.md#releasing).
 
 ### (c) Run in Xcode (for development)
 

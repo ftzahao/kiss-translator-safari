@@ -35,7 +35,11 @@ env:
 jobs:
   build:
     name: Build (unsigned)
-    runs-on: macos-15
+    # macos-26 is GitHub's newest GA macOS runner image (no `macos-27` label
+    # exists yet; `xcode-27` is a preview image). Its default Xcode is 26.x,
+    # which carries the macOS 26 SDK — the compile-time opt-in for Liquid Glass.
+    # A macos-15 runner builds against the macOS 15 SDK and never gets it.
+    runs-on: macos-26
     # Hard ceiling; the build itself finishes well under this.
     timeout-minutes: 30
 
