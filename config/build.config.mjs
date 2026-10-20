@@ -12,13 +12,16 @@ export const upstream = {
   repo: "kiss-translator",
   // Pinned upstream release. Bump this (and run `make verify`) to upgrade.
   version: "2.1.1",
-  // Commit SHA resolved for the tag above. Verified at fetch time.
-  commit: "aa70b16e4c5e2d2f6fb32f3148ded54c4cd872cd",
+  // Commit SHA resolved for the tag above (v2.1.1^{}). Verified at fetch time:
+  // the build aborts if the tag does not resolve to exactly this commit.
+  commit: "a1279f2517bd478ef1dd93b941f9177094486cd4",
   // The exact pnpm version upstream pins in .pnpm-version. Using a different
   // major (e.g. pnpm 10+) fails with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
   pnpmVersion: "9.14.4",
-  // Minimum Node.js major that can build upstream.
-  nodeMajor: 26,
+  // Minimum Node.js major that can build upstream. Upstream declares no
+  // `engines` field, so this mirrors what CI pins rather than an upstream
+  // requirement; keep it in sync with NODE_VERSION in the workflows.
+  nodeMajor: 20,
 };
 
 export const app = {
