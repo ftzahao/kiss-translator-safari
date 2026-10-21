@@ -40,10 +40,8 @@ timeline with you and credit you in the advisory unless you prefer otherwise.
 In scope for this repository:
 
 - The macOS container app and the way it embeds and launches the extension
-- Build and release tooling, including supply-chain integrity of the pinned
+- Build tooling, including supply-chain integrity of the pinned
   upstream source (pin verification, artifact checksums)
-- CI/CD configuration that could allow publishing a tampered or
-  unexpectedly-signed artifact
 - Code signing and packaging mistakes that would weaken distribution security
 - Documentation that gives unsafe installation instructions
 

@@ -19,14 +19,17 @@ export const upstream = {
   // major (e.g. pnpm 10+) fails with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
   pnpmVersion: "9.14.4",
   // Minimum Node.js major that can build upstream. Upstream declares no
-  // `engines` field, so this mirrors what CI pins rather than an upstream
-  // requirement; keep it in sync with NODE_VERSION in the workflows.
+  // `engines` field, so this mirrors what this wrapper builds with rather
+  // than an upstream requirement.
   nodeMajor: 20,
 };
 
 export const app = {
-  // Marketing name shown in Finder / Launchpad / Safari settings.
-  displayName: "KISS Translator",
+  // Marketing/user-facing name: the .app bundle name, the DMG/ZIP basename,
+  // the Safari extension manifest name and the onboarding UI title.
+  // Internal plumbing (bundle ids, Xcode target/scheme, executable name)
+  // keeps `productName` and stays ASCII.
+  displayName: "简约翻译",
   // Product name; also the .app bundle name and the Xcode target name.
   productName: "KISSTranslator",
   // Bundle identifiers.

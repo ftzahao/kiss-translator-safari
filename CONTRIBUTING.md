@@ -1,7 +1,7 @@
 # Contributing
 
-Thanks for your interest in KISS Translator for Safari. Please read this before
-opening an issue or a pull request.
+Thanks for your interest in 简约翻译 (KISS Translator for Safari). Please read
+this before opening an issue or a pull request.
 
 - [Where to report what](#where-to-report-what)
 - [Reporting a bug](#reporting-a-bug)
@@ -23,7 +23,7 @@ Deciding where to report something saves everyone time:
 | Subtitle, TTS or prompt behaviour | [Upstream](https://github.com/fishjar/kiss-translator/issues) |
 | App will not launch, DMG/ZIP problems, Gatekeeper/quarantine | **This repository** |
 | Safari does not list the extension, "cannot verify extension" | **This repository** |
-| Build failures, `make` targets, CI, Xcode project generation | **This repository** |
+| Build failures, `make` targets, Xcode project generation | **This repository** |
 | Container app UI (the small window that explains how to enable) | **This repository** |
 
 Upstream supports Chrome/Edge/Firefox; when reporting there, state clearly that
@@ -32,15 +32,14 @@ not chase browser-only differences.
 
 ## Reporting a bug
 
-Use the [bug report template](https://github.com/ftzahao/kiss-translator-safari/issues/new?template=bug_report.yml)
-and fill in every field. At minimum we need:
+Open an issue. At minimum we need:
 
 - macOS version (`sw_vers -productVersion`)
 - Safari version (Safari → About Safari)
-- App version (what the release tag says, e.g. `2.1.1`)
+- App version (e.g. `2.1.1`)
 - Upstream version shown in the extension's About/settings page
 - Exact steps to reproduce, expected result, actual result
-- Whether the app was downloaded from Releases or built locally
+- How the app was built (which Xcode, signed or `SIGNING=0`)
 
 If a crash or launch failure is involved, attach the console output if you have
 it:
@@ -51,8 +50,7 @@ log show --last 5m --predicate 'process == "KISSTranslator"' --style compact
 
 ## Requesting a feature
 
-Use the [feature request template](https://github.com/ftzahao/kiss-translator-safari/issues/new?template=feature_request.yml).
-Be concrete about the outcome you want.
+Open an issue and be concrete about the outcome you want.
 
 Feature requests that belong upstream (new translation service, new rule
 capability, new UI in the extension) are usually closed here with a pointer to
@@ -88,11 +86,10 @@ Before opening a pull request, please make sure:
 See [docs/BUILDING.md](docs/BUILDING.md) for target-by-target details and
 troubleshooting.
 
-CI (`.github/workflows/ci.yml`) runs the same unsigned build on `macos-26` and
-asserts that the built `.app` contains the `.appex` with a valid
-`manifest.json`. `macos-26` (default Xcode 26.x) is required because the Liquid
-Glass appearance on macOS 26+ needs a build against the macOS 26 SDK; a
-`macos-15` runner only has Xcode 16. A red CI run will not be merged.
+This repository has no CI: the build gate is a clean `make all` plus
+`make verify` on your own machine. Use Xcode 26+ when you want the Liquid
+Glass appearance on macOS 26+ (it is opted into at compile time via the
+macOS 26 SDK).
 
 ## What this repository does and does not do
 
@@ -110,9 +107,9 @@ called out in the pull request and the changelog.
 
 - Keep pull requests focused; one logical change per PR.
 - Describe **why**, not just what. Link the issue it closes.
-- Include build evidence: CI link, or the output of `make verify` and the
-  artifact names produced by `make dmg`.
-- Update the docs you invalidate (README, README.zh-CN, docs/, CHANGELOG).
+- Include build evidence: the output of `make verify` and the artifact names
+  produced by `make dmg`.
+- Update the docs you invalidate (README.zh-CN, docs/, CHANGELOG).
 - Do not bump versions in a regular PR unless the PR is the upstream upgrade.
 
 ## Licensing of contributions

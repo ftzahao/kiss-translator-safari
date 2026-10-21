@@ -69,7 +69,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
     private func heartbeat() -> [String: Any] {
         [
             "handled": true,
-            "message": "KISS Translator 运行正常",
+            "message": "简约翻译运行正常",
             "version": AppConfiguration.version,
         ]
     }

@@ -9,12 +9,28 @@ separate version number.
 
 ## [Unreleased]
 
+### Changed
+
+- **The app is now named 简约翻译.** The built bundle is `build/App/简约翻译.app`,
+  DMG/ZIP artifacts are `简约翻译-<version>.dmg` / `.zip`, and Safari lists the
+  extension as 简约翻译 (manifest name + onboarding copy). Internal names
+  (bundle ids, Xcode target/scheme, executable `KISSTranslator`) are unchanged.
+
+### Removed
+
+- **CI and release are gone; this repository is now local-build only.** The
+  GitHub Actions workflows (`ci.yml`, `release.yml`), issue/PR templates and
+  the English `README.md` were deleted. The only supported flow is cloning the
+  repo and building on your own Mac (`make all` signed with a free Apple
+  Development certificate), which produces a package that actually works —
+  ad-hoc-signed CI/Release artifacts could never enable the extension in
+  Safari. Documentation is maintained in `README.zh-CN.md` only.
+
 ### Fixed
 
 - **The advertised build orchestrator `scripts/release.mjs` did not exist.** The
   README, `docs/BUILDING.md` and the `[0.1.0]` notes referred to a script that
-  was never committed; the real release flow is `make all SIGNING=0` +
-  the signing step in `.github/workflows/release.yml` + `make dmg SIGNING=0`.
+  was never committed; the real build flow is `make all` (plus `make verify`).
   The docs now describe that path.
 - **"The file can't be found" when clicking the primary button.** The Safari
   fallback launched `/System/Applications/Safari.app` by absolute path, but on
@@ -40,25 +56,26 @@ separate version number.
   "SFErrorDomain 错误 1".
 - **The app is no longer built without entitlements.** An ad-hoc
   `codesign --sign -` on a sandboxed bundle drops its entitlements unless they
-  are passed explicitly; the release workflow now signs inside-out
-  (appex executable → appex → app) with `--entitlements` and *fails* the job
+  are passed explicitly; signing now happens inside-out
+  (appex executable → appex → app) with `--entitlements` and fails loudly
   if the app sandbox or Apple Events entitlement is missing afterwards.
-  `make sign` signs the same way.
-- Release and CI workflows pinned Node 26 while `upstream.nodeMajor` is 20;
-  both now use 20 so a clean runner cannot abort during `make extension`.
+  `make sign` signs that way.
 - **An interrupted upstream fetch no longer poisons later builds.** A network
   failure during `git fetch` left `.build/upstream-safari-raw/.git` without a
   HEAD; the next run then died at `git rev-parse HEAD` instead of refetching.
   The builder now treats a HEAD-less checkout as corrupt, wipes it and pulls
   again.
+- **`make all` now really produces the DMG/ZIP.** Every doc (README, this
+  changelog, `docs/BUILDING.md`) described `all` as ending in `dmg`, but the
+  Makefile target stopped at `build`, so a plain `make all` left no package to
+  install.
 
 ### Added
 
 - **The onboarding window warns when the build cannot work.** Ad-hoc or
-  unsigned builds (CI artifacts, the published DMG before a Developer ID pass)
-  are invisible to Safari — the extension never appears in Settings →
-  Extensions no matter what the user does. The window now reads its own
-  Team Identifier at launch and, when it is missing, shows an orange notice
+  unsigned builds are invisible to Safari — the extension never appears in
+  Settings → Extensions no matter what the user does. The window now reads its
+  own Team Identifier at launch and, when it is missing, shows an orange notice
   telling the user to rebuild with a developer certificate.
 
 - `com.apple.security.automation.apple-events` (with
@@ -74,15 +91,6 @@ separate version number.
 
 ### Changed
 
-- **CI and release now build on `macos-26` instead of `macos-15`.** This is what
-  actually makes the Liquid Glass entry above reach users: the appearance is
-  opted into at compile time, and the `macos-15` image only ships Xcode 16
-  (macOS 15 SDK), so every artifact built there kept the pre-26 look no matter
-  which macOS the user runs. `macos-26` defaults to Xcode 26.x (macOS 26 SDK).
-  There is no `macos-27` runner label yet (`xcode-27` is a preview image), so
-  `macos-26` is the newest GA image. The release workflow now also asserts at
-  build time that the macOS SDK is 26 or newer and fails instead of silently
-  publishing a build without the glass treatment.
 - The failure badge reads "Safari 未能确认扩展" and explains what to do, instead
   of the misleading "无法获取状态".
 

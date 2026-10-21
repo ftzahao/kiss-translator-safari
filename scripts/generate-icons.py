@@ -6,7 +6,7 @@ Why hand-rolled rather than an existing converter: the icon is a handful of
 rounded rectangles and quadrilaterals, so a small signed-distance rasterizer
 gives exact control over macOS icon geometry (Apple's 824/1024 body ratio and
 185/824 corner radius) with anti-aliasing, and keeps the build free of binary
-tooling that CI would otherwise have to install.
+tooling that would otherwise have to be installed.
 
 Outputs (all opaque RGB, as App Store validation requires):
   app/Assets.xcassets/AppIcon.appiconset/icon_*.png

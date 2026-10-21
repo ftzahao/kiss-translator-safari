@@ -3,8 +3,8 @@
 # Everything is driven from config/build.config.mjs; this file only wires the
 # steps together. Run `make help` for the short version.
 #
-#   make all        extension -> project -> app (the full build)
-#   make all SIGNING=0          unsigned build (what CI runs)
+#   make all        extension -> project -> app -> DMG + ZIP (the full build)
+#   make all SIGNING=0          unsigned build (not usable with Safari)
 #   make all DEVELOPER_ID="Developer ID Application: …"   notarisation-ready build
 
 SHELL := /bin/bash
@@ -17,22 +17,25 @@ SHELL := /bin/bash
 # Read the single source of truth. Fall back to a clear error if node is absent.
 VERSION := $(shell node -e 'import("./config/build.config.mjs").then(m=>process.stdout.write(m.app.marketingVersion))' 2>/dev/null)
 PRODUCT := $(shell node -e 'import("./config/build.config.mjs").then(m=>process.stdout.write(m.app.productName))' 2>/dev/null)
+DISPLAY := $(shell node -e 'import("./config/build.config.mjs").then(m=>process.stdout.write(m.app.displayName))' 2>/dev/null)
 
 XCODEGEN ?= $(shell command -v xcodegen 2>/dev/null || mise which xcodegen 2>/dev/null)
 NODE_BIN := $(shell command -v node)
 PYTHON ?= $(shell command -v python3)
 
+# PROJECT/SCHEME/binary stay ASCII (`productName`); only the user-visible
+# .app bundle name uses `displayName` (简约翻译.app).
 PROJECT   := $(PRODUCT).xcodeproj
 SCHEME    := $(PRODUCT)
 CONFIG    := Release
 DERIVED   := build/DerivedData
-APP       := build/App/$(PRODUCT).app
+APP       := build/App/$(DISPLAY).app
 BUILT_APP := $(DERIVED)/Build/Products/$(CONFIG)/$(PRODUCT).app
 DIST      := build/dist
 
 # SIGNING=1 (default) signs with a local development identity when available.
-# SIGNING=0 builds completely unsigned, which is what CI and release do before
-# ad-hoc signing the result.
+# SIGNING=0 builds completely unsigned (never usable with Safari — it needs a
+# real Team Identifier, see docs/BUILDING.md).
 SIGNING ?= 1
 DEVELOPMENT_TEAM ?= $(shell security find-certificate -c "Apple Development" -p 2>/dev/null | openssl x509 -noout -nameopt sep_multiline -subject 2>/dev/null | awk -F= '/OU=/{print $$2; exit}')
 DEVELOPER_ID ?=
@@ -59,14 +62,14 @@ endif
 .PHONY: help all deps extension project build sign package dmg zip verify clean distclean icons
 
 help:
-	@printf '\nKISS Translator — Safari extension build\n\n'
-	@printf '  make all        Full build: web extension, Xcode project, .app\n'
+	@printf '\n简约翻译 (KISS Translator for Safari) — build\n\n'
+	@printf '  make all        Full build: web extension, Xcode project, .app, DMG + ZIP\n'
 	@printf '  make deps       Fetch + build the pinned upstream web extension only\n'
 	@printf '  make extension  Same as deps (alias kept for clarity)\n'
 	@printf '  make project    Generate $(PROJECT) with XcodeGen\n'
 	@printf '  make build      Compile the app (assumes project + extension exist)\n'
 	@printf '  make sign       Sign the built app (DEVELOPER_ID="Developer ID Application: …")\n'
-	@printf '  make dmg        Produce $(DIST)/$(PRODUCT)-$(VERSION).dmg and .zip\n'
+	@printf '  make dmg        Produce $(DIST)/$(DISPLAY)-$(VERSION).dmg and .zip\n'
 	@printf '  make package    sign + dmg\n'
 	@printf '  make verify     Check the built bundle is a valid Safari extension\n'
 	@printf '  make icons      Regenerate the app icon PNGs\n'
@@ -75,7 +78,11 @@ help:
 	@printf '  Options: SIGNING=0 (unsigned)  DEVELOPMENT_TEAM=…  DEVELOPER_ID=…\n\n'
 	@printf '  Version: %s   Product: %s\n\n' '$(VERSION)' '$(PRODUCT)'
 
-all: extension project build
+# `dmg` runs after `build` so the package always contains the freshly compiled
+# .app. `dmg` itself keeps no prerequisite on purpose: re-signing the app and
+# then re-running a phony `build` would re-execute the appex resource-copy
+# phase after signing.
+all: extension project build dmg
 
 # --------------------------------------------------------------------------
 # Web extension

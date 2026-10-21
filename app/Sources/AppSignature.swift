@@ -11,8 +11,7 @@ import Security
 /// Code-signing facts about the running app bundle.
 ///
 /// Safari only lists a web extension whose *containing app* carries a real
-/// Team Identifier. An ad-hoc signed or unsigned build (what CI and the
-/// release workflow produce before a Developer ID pass) is silently omitted
+/// Team Identifier. An ad-hoc signed or unsigned build is silently omitted
 /// from Safari → Settings → Extensions — the user clicks the onboarding
 /// button, Safari opens, and the extension is nowhere to be found. Surfacing
 /// the missing team in the UI turns that dead end into an explanation.

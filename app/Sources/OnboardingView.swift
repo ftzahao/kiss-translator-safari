@@ -164,8 +164,8 @@ struct OnboardingView: View {
     private var statusHelp: String {
         switch model.status {
         case .unknown: String(localized: "正在向 Safari 查询扩展状态。", comment: "Status help: checking")
-        case .enabled: String(localized: "Safari 已启用 KISS Translator 扩展。", comment: "Status help: enabled")
-        case .disabled: String(localized: "请在 Safari 设置的「扩展」中勾选 KISS Translator。", comment: "Status help: disabled")
+        case .enabled: String(localized: "Safari 已启用简约翻译扩展。", comment: "Status help: enabled")
+        case .disabled: String(localized: "请在 Safari 设置的「扩展」中勾选简约翻译。", comment: "Status help: disabled")
         case .failed(let reason): reason
         }
     }
@@ -187,7 +187,7 @@ struct OnboardingView: View {
                 .font(.headline)
 
             step(1, String(localized: "点击下方按钮，浏览器会打开 Safari 设置。", comment: "Step 1"))
-            step(2, String(localized: "在左侧选择「扩展」，勾选右侧的 KISS Translator。", comment: "Step 2"))
+            step(2, String(localized: "在左侧选择「扩展」，勾选右侧的简约翻译。", comment: "Step 2"))
             step(3, String(localized: "首次使用时，按提示允许扩展访问网页；随后刷新页面即可。", comment: "Step 3"))
 
             Divider()

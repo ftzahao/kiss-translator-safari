@@ -135,7 +135,7 @@ enum SafariExtensionBridge {
             // extensions, where the scoped call silently returns error 1.
             guard openSafariExtensionSettings() else {
                 return .failed(String(
-                    localized: "无法找到或打开 Safari。请手动打开 Safari 的「设置 › 扩展」并启用 KISS Translator。",
+                    localized: "无法找到或打开 Safari。请手动打开 Safari 的「设置 › 扩展」并启用简约翻译。",
                     comment: "Safari could not be located through Launch Services"
                 ))
             }
@@ -306,7 +306,7 @@ private func failureMessage(_ error: any Error) -> String {
     let nsError = error as NSError
     if nsError.domain == "SFErrorDomain", nsError.code == 1 {
         return String(
-            localized: "Safari 无法打开扩展设置。请确认已在「Safari 设置 › 扩展」中启用了 KISS Translator。",
+            localized: "Safari 无法打开扩展设置。请确认已在「Safari 设置 › 扩展」中启用了简约翻译。",
             comment: "SFErrorDomain error 1 shown when Safari refuses the preferences request"
         )
     }

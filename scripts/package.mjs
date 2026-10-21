@@ -2,7 +2,7 @@
 /**
  * Packages build/App/<Product>.app into a distributable DMG and ZIP.
  *
- * Output (consumed verbatim by .github/workflows/release.yml):
+ * Output:
  *   build/dist/KISSTranslator-<version>.dmg
  *   build/dist/KISSTranslator-<version>.zip
  *
@@ -20,10 +20,10 @@ import { step, info, ok, fail } from "./lib/log.mjs";
 const run = promisify(execFile);
 const ROOT = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 
-const APP = path.join(ROOT, "build", "App", `${app.productName}.app`);
+const APP = path.join(ROOT, "build", "App", `${app.displayName}.app`);
 const DIST = path.join(ROOT, "build", "dist");
 const STAGE = path.join(ROOT, "build", "dmg-stage");
-const BASENAME = `${app.productName}-${app.marketingVersion}`;
+const BASENAME = `${app.displayName}-${app.marketingVersion}`;
 
 async function exists(p) {
   try {

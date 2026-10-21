@@ -18,7 +18,7 @@ import Foundation
 
 enum AppConfiguration {
     /// Marketing name shown in the UI and in Safari's extension settings.
-    static let displayName = "KISS Translator"
+    static let displayName = "简约翻译"
 
     /// The main app's bundle identifier.
     static let bundleIdentifier = "com.ftzahao.kisstranslator"

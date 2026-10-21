@@ -1,235 +1,215 @@
-# KISS Translator for Safari
+# 简约翻译（KISS Translator for Safari）
 
-**A native Safari Web Extension for macOS, packaged on top of [KISS Translator](https://github.com/fishjar/kiss-translator).**
+**把开源双语翻译扩展 [KISS Translator](https://github.com/fishjar/kiss-translator) 打包成 macOS 原生 Safari 扩展，应用名为「简约翻译」。**
 
-[![CI](https://github.com/ftzahao/kiss-translator-safari/actions/workflows/ci.yml/badge.svg)](https://github.com/ftzahao/kiss-translator-safari/actions/workflows/ci.yml)
-[![Latest release](https://img.shields.io/github/v/release/ftzahao/kiss-translator-safari?color=blue)](https://github.com/ftzahao/kiss-translator-safari/releases)
-[![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-green.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-macOS%2014%2B%20%C2%B7%20Safari%2017%2B-lightgrey)](https://github.com/ftzahao/kiss-translator-safari)
+[![许可证 GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-green.svg)](LICENSE)
+[![平台](https://img.shields.io/badge/platform-macOS%2014%2B%20%C2%B7%20Safari%2017%2B-lightgrey)](https://github.com/ftzahao/kiss-translator-safari)
 
-English | [简体中文](README.zh-CN.md)
+> **非官方项目。** 本项目是社区为 Safari 做的打包版本，并非上游作者的官方产品。
+> 详见[许可证与署名](#许可证与署名)。
 
-> **Unofficial.** This is a community packaging of KISS Translator for Safari, not an official
-> product of the upstream author. See [License & attribution](#license--attribution).
+本仓库只做一件事：**克隆代码，在自己的 Mac 上本地构建**。不提供预编译下载，
+也没有 CI 与发布流程——本地用免费的 Apple Development 证书签名构建的包，
+在自己机器上就是完整可用的。
 
 ---
 
-## Screenshot
+## 截图
 
-<!-- docs/images/hero.png is added by the maintainers; the alt text is the fallback until then. -->
+<!-- docs/images/hero.png 由维护者补充；在此之前显示的是替代文字。 -->
 <picture>
-  <source srcset="docs/images/hero.png" type="image/png">
-  <img src="docs/images/hero.png" alt="KISS Translator in Safari showing bilingual inline translation of a web page">
+  <source srcset="docs/images/截屏2026-10-21 09.50.59 - Safari浏览器.png" type="image/png">
+  <img src="docs/images/截屏2026-10-21 09.50.59 - Safari浏览器.png" alt="KISS Translator 在 Safari 中展示网页双语对照翻译">
+</picture>
+<picture>
+  <source srcset="docs/images/截屏2026-10-21 09.51.04 - Safari浏览器.png" type="image/png">
+  <img src="docs/images/截屏2026-10-21 09.51.04 - Safari浏览器.png" alt="KISS Translator 在 Safari 中展示网页双语对照翻译">
 </picture>
 
 ---
 
-## Features
+## 功能
 
-Everything below comes from the upstream extension. This repository only adds the macOS
-container app, the build pipeline and the packaging — it does not change translation behaviour.
+以下能力全部来自上游扩展。本仓库只负责 macOS 容器 App、构建流程和打包，
+不会改变翻译行为。
 
-- **Bilingual inline translation** — translates a page paragraph by paragraph and shows the
-  result under (or above) the original text, preserving rich-text markup. Also supports a
-  translation-only mode that hides the original.
-- **Selection translation and word lookup** — select text to get a floating bubble with the
-  translation; English words can be looked up in a dictionary and saved to a word list.
-- **Hover translation** — translate the paragraph under the mouse on demand, or hold the
-  mouse button to trigger it (configurable).
-- **Multiple translation engines** — Google, Microsoft/Azure, DeepL and DeepLX, Baidu,
-  Tencent, Volcengine, Yandex, plus AI services including OpenAI, Gemini, Claude, DeepSeek,
-  Ollama, OpenRouter and others; and a fully **custom / OpenAI-compatible API** entry where
-  you supply the endpoint, key, model and request template yourself.
-- **Per-site rules and automatic translation** — scope translation rules per website with a
-  visual element picker; automatically translate matching sites or exclude the ones you never
-  want touched.
-- **Text-to-speech** — read translated text aloud from the extension.
-- **YouTube bilingual subtitles** — merge and translate subtitle tracks in the player.
-- **Translation style presets** — underline, marker, fuzzy, blockquote and more, so bilingual
-  output is legible rather than jarring.
-- **Configuration sync** — sync settings across devices through a self-hosted
-  [KISS-Worker](https://github.com/fishjar/kiss-worker) deployment or WebDAV.
+- **网页双语对照翻译**：逐段翻译网页，并在原文下方（或上方）插入译文，保留富文本格式；
+  也可以切换为「只显示译文」模式。
+- **划词翻译与查词**：选中文字即弹出译文气泡；英文单词可查词典并加入生词本。
+- **悬浮翻译**：鼠标悬停时按需翻译当前段落，也支持长按鼠标触发（可配置）。
+- **多种翻译引擎**：Google、Microsoft/Azure、DeepL 与 DeepLX、百度、腾讯、火山、
+  Yandex 等传统接口；以及 OpenAI、Gemini、Claude、DeepSeek、Ollama、OpenRouter 等
+  AI 接口。还提供**自定义 / OpenAI 兼容接口**，可自行填写端点、密钥、模型和请求模板。
+- **网站规则与自动翻译**：按网站配置翻译规则，配合可视化元素选择器精确圈定翻译范围；
+  指定站点自动翻译，不需要的站点排除在外。
+- **朗读（TTS）**：对翻译结果进行语音朗读。
+- **YouTube 双语字幕**：在播放器中合并并翻译字幕轨道。
+- **译文样式预设**：下划线、荧光笔、模糊、引用块等多种样式，让双语排版更易读。
+- **配置同步**：通过自建的 [KISS-Worker](https://github.com/fishjar/kiss-worker)
+  或 WebDAV 在多台设备之间同步设置。
 
-Not every upstream surface is available on Safari. Safari's Web Extension runtime differs
-from Chromium/Firefox (for example, no offscreen documents in the same form), so some
-advanced surfaces such as file translation and on-device AI features may be limited or
-missing depending on the upstream release and Safari version. When in doubt, check the
-upstream release notes.
+Safari 的 Web Extension 运行时与 Chromium / Firefox 并不完全一致（例如离屏文档的
+处理方式不同），因此文件翻译、端侧 AI 等进阶功能可能会受限甚至缺失，具体取决于上游版本和
+Safari 版本。遇到疑问时请以对应上游版本的发布说明为准。
 
 ---
 
-## Installation
+## 安装
 
-There are three ways to get the extension. Pick one.
+克隆仓库后本地构建。构建产物（`build/App/简约翻译.app`）只在构建它的
+那台 Mac 上可用。
 
-### (a) Download from Releases (recommended for users)
+### (a) 从源码构建
 
-The published builds are **unsigned and not notarized** — they are only ad-hoc signed.
-macOS blocks them on first launch until you clear the quarantine flag.
+**环境要求**
 
-1. Open [Releases](https://github.com/ftzahao/kiss-translator-safari/releases) and download
-   `KISSTranslator-<version>.dmg` (and `checksums.txt` if you want to verify).
-2. Optionally verify the download:
+| 工具     | 版本                                                                               |
+| -------- | ---------------------------------------------------------------------------------- |
+| macOS    | 14 (Sonoma) 或更高                                                                 |
+| Xcode    | 16 或更高（已通过 `xcode-select` 选中命令行工具）；要启用液态玻璃外观需 Xcode 26+  |
+| Node.js  | 20 或更高                                                                          |
+| pnpm     | **9.14.4**，必须是这个版本。pnpm 10+ 会因 `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH` 失败 |
+| XcodeGen | 最新版（`brew install xcodegen`）                                                  |
 
-   ```sh
-   shasum -a 256 -c checksums.txt
-   ```
-
-3. Open the DMG and drag **KISS Translator.app** to `/Applications`.
-4. Clear the quarantine attribute — either is fine:
-
-   - Finder: right-click the app → **Open** → **Open** in the confirmation dialog.
-   - Terminal:
-
-     ```sh
-     xattr -dr com.apple.quarantine "/Applications/KISS Translator.app"
-     ```
-
-5. Launch the app once. It is only a container; it explains how to enable the extension and
-   then stays out of the way.
-6. In Safari, open **Settings → Extensions**, tick **KISS Translator**, and grant website
-   access. You can allow it per site, or choose "Always Allow on Every Website" if you prefer.
-
-### (b) Build from source
-
-**Prerequisites**
-
-| Tool | Version |
-| --- | --- |
-| macOS | 14 (Sonoma) or later |
-| Xcode | 16 or later (command line tools selected via `xcode-select`); Xcode 26+ for the Liquid Glass appearance |
-| Node.js | 20 or later |
-| pnpm | **9.14.4** — exactly. pnpm 10+ fails with `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH` |
-| XcodeGen | latest (`brew install xcodegen`) |
-
-**Build**
+**开始构建**
 
 ```sh
 git clone https://github.com/ftzahao/kiss-translator-safari.git
 cd kiss-translator-safari
 
-make deps        # fetch and verify the pinned upstream release, install its dependencies
-make all         # extension -> Xcode project -> universal .app -> DMG + ZIP
+make deps        # 拉取并校验锁定版本的上游源码，安装其依赖
+make all         # 扩展 → Xcode 工程 → 通用二进制 App → DMG + ZIP
 ```
 
-Individual targets are available if you want to stop halfway:
+**签名——Safari 认这个构建的前提**
 
-| Target | What it does |
-| --- | --- |
-| `make deps` | Fetch the pinned upstream release into `.build/upstream` and install its dependencies |
-| `make extension` | Build the MV3 web extension into `extension/` |
-| `make project` | Generate `KISSTranslator.xcodeproj` with XcodeGen |
-| `make build` | Build `build/App/KISSTranslator.app` (universal arm64 + x86_64) |
-| `make sign` | Sign the app (requires your own signing identity) |
-| `make dmg` | Produce `build/dist/KISSTranslator-<version>.dmg` and `.zip` |
-| `make all` | `extension` + `project` + `build` + `dmg` |
-| `make verify` | Verify the pinned upstream version/commit and the produced bundle |
-| `make clean` | Remove build outputs |
+Safari 只列出包含 App 代码签名中带真实 **Team Identifier** 的 Web 扩展。没有它
+（ad-hoc 或未签名），无论 onboarding 怎么提示，扩展都不会出现在
+**Safari → 设置 → 扩展** 里。
 
-`make all SIGNING=0` followed by `make dmg SIGNING=0` is the release path CI uses;
-there is no separate release script. See [Releasing](docs/BUILDING.md#releasing).
+1. 在 Xcode 中登录 Apple ID（**Xcode → Settings → Accounts → +**），Xcode 会
+   自动为你签发 _Apple Development_ 证书——**免费**账号即可，构建的 App 只在
+   自己的 Mac 上运行。
+2. `make all` 会自动检测该证书所属的团队并用它签名。需要显式指定（或自动检测
+   为空）时——Team ID 是证书的 **OU** 字段（不要相信证书名称括号里的后缀）：
 
-### (c) Run in Xcode (for development)
+   ```sh
+   security find-certificate -c "Apple Development" -p \
+     | openssl x509 -noout -subject -nameopt sep_multiline | awk -F= '/OU=/{print $2}'
+   make all DEVELOPMENT_TEAM=<TEAMID>
+   ```
+
+3. 验证结果：`make verify` 输出 `Safari will accept this build`，且 onboarding
+   窗口不再显示橙色的 ad-hoc 警告。
+4. 启动一次 `build/App/简约翻译.app`——这一步会把扩展注册给 Safari——然后
+   在 **Safari → 设置 → 扩展** 中勾选 **简约翻译** 并授予网站访问权限
+   （逐站点授权，或「始终允许在所有网站」）。
+
+> 这种构建只能在你自己的 Mac 上运行：Apple Development 证书不可再分发。本地构建的
+> App 没有 quarantine 属性，首次打开也不会触发 Gatekeeper 警告。
+
+中途也想单独执行也可以：
+
+| 目标             | 作用                                                             |
+| ---------------- | ---------------------------------------------------------------- |
+| `make deps`      | 拉取锁定的上游版本到 `.build/upstream` 并安装依赖                |
+| `make extension` | 构建 MV3 Web Extension 到 `extension/`                           |
+| `make project`   | 用 XcodeGen 生成 `KISSTranslator.xcodeproj`                      |
+| `make build`     | 构建 `build/App/简约翻译.app`（arm64 + x86_64 通用二进制）        |
+| `make sign`      | 签名（需要你自己的签名证书）                                     |
+| `make dmg`       | 生成 `build/dist/简约翻译-<版本>.dmg` 与 `.zip`                  |
+| `make all`       | 依次执行 `extension` + `project` + `build` + `dmg`               |
+| `make verify`    | 校验锁定的上游版本/提交以及产物完整性                            |
+| `make clean`     | 清理构建产物                                                     |
+
+### (b) 在 Xcode 中调试
 
 ```sh
 make project
 open KISSTranslator.xcodeproj
 ```
 
-Press **Run** in Xcode. The app launches, but Safari will refuse to load the extension
-because it is not signed by a trusted developer.
+在 Xcode 里点 **Run** 运行容器 App。此时 Safari 会拒绝加载扩展，因为它没有可信签名。
 
-To allow unsigned extensions:
+允许未签名的扩展：
 
-1. In Safari, open **Settings → Advanced** and enable **Show features for web developers**.
-   (This is the current Safari UI; older instructions to use
-   `defaults write com.apple.Safari IncludeDevelopMenu -bool true` are obsolete.)
-2. A **Develop** menu now appears in the menu bar. Open **Develop → Allow Unsigned Extensions**.
-   You will be asked for your password. This setting is cleared every time Safari restarts,
-   so you must re-apply it after each relaunch.
-3. Run the app from Xcode again so Safari picks up the extension, then enable it in
-   **Settings → Extensions**.
+1. 打开 Safari **设置 → 高级**，勾选 **显示网页开发者功能**。
+   （这是当前 Safari 的正确入口；旧教程里的 `defaults write com.apple.Safari IncludeDevelopMenu -bool true` 已过时。）
+2. 菜单栏会出现 **开发** 菜单，点击 **开发 → 允许未签名的扩展**，按提示输入密码。
+   该设置**在每次重启 Safari 后失效**，需要重新勾选。
+3. 再从 Xcode 运行一次 App，让 Safari 重新识别扩展，然后在 **设置 → 扩展** 中启用。
 
-If Safari still does not list the extension, `safaridriver --enable` (with administrator
-rights) also enables the automation-related developer settings and is a useful diagnostic.
+如果 Safari 仍然找不到扩展，可以执行 `safaridriver --enable`（需要管理员权限）开启与
+自动化相关的开发者开关，用来辅助排查。
 
 ---
 
-## Requirements
+## 系统要求
 
-| | |
-| --- | --- |
-| OS | macOS 14 Sonoma or later |
-| Browser | Safari 17 or later |
-| Architecture | Universal binary — Apple Silicon (`arm64`) and Intel (`x86_64`) |
-| Build tooling | Xcode 16+, Node 20+ (matches `upstream.nodeMajor`), pnpm 9.14.4, XcodeGen |
-| Appearance | Liquid Glass on macOS 26+ when built with the macOS 26 SDK (Xcode 26+); classic appearance otherwise |
-| iOS / iPadOS | Not supported yet |
+|              |                                                                                                 |
+| ------------ | ----------------------------------------------------------------------------------------------- |
+| 系统         | macOS 14 Sonoma 或更高                                                                          |
+| 浏览器       | Safari 17 或更高                                                                                |
+| 架构         | 通用二进制：Apple Silicon（`arm64`）与 Intel（`x86_64`）                                        |
+| 构建工具     | Xcode 16+、Node 20+（与 `upstream.nodeMajor` 一致）、pnpm 9.14.4、XcodeGen                      |
+| 外观         | 用 macOS 26 SDK（Xcode 26+）构建时，在 macOS 26+ 上启用液态玻璃（Liquid Glass）；否则为经典外观 |
+| iOS / iPadOS | 暂不支持                                                                                        |
 
 ---
 
-## How it works
+## 工作原理
 
 ```
-  upstream release  v<version>  (pinned in config/build.config.mjs)
+  上游发布 v<版本>（锁定在 config/build.config.mjs）
          │
-         │  make deps -- fetch tarball at the pinned commit, verify SHA, pnpm install (9.14.4)
+         │  make deps —— 按锁定 commit 拉取源码包、校验 SHA、pnpm install (9.14.4)
          ▼
-  .build/upstream/                (upstream source tree, never modified in place)
+  .build/upstream/                （上游源码树，不在原地修改）
          │
-         │  make extension -- build MV3 web extension
+         │  make extension —— 构建 MV3 Web Extension
          ▼
-  extension/                      (manifest.json, background.js, content.js, ...)
+  extension/                      （manifest.json、background.js、content.js 等）
          │
-         │  make project -- XcodeGen reads project.yml (+ config/build.config.mjs)
+         │  make project —— XcodeGen 读取 project.yml（配合 config/build.config.mjs）
          ▼
-  KISSTranslator.xcodeproj        (generated, git-ignored)
+  KISSTranslator.xcodeproj        （生成物，已 git 忽略）
          │
-         │  make build -- xcodebuild, configuration Release, universal binary
+         │  make build —— xcodebuild，Release 配置，通用二进制
          ▼
-  build/App/KISSTranslator.app
+  build/App/简约翻译.app
     └── Contents/PlugIns/KISSTranslatorExtension.appex
-          └── Contents/Resources/manifest.json + extension assets
+          └── Contents/Resources/manifest.json 及扩展资源
          │
          │  make dmg
          ▼
-  build/dist/KISSTranslator-<version>.dmg  +  .zip
-         │
-         │  .github/workflows/release.yml on tag push
-         ▼
-  GitHub Release (with checksums.txt)
+  build/dist/简约翻译-<版本>.dmg  +  .zip   （本地安装使用）
 ```
 
-Key points:
+几点说明：
 
-- The Xcode project is **generated**. Never edit it by hand; edit the XcodeGen spec and run
-  `make project`.
-- The web extension is **built from a pinned upstream commit**, not from a moving branch.
-  `make verify` re-checks the pin.
-- The SwiftUI container is deliberately minimal: it hosts the `.appex` and explains how to
-  enable it. All translation logic lives in the extension.
+- Xcode 工程是**生成**出来的，不要手工修改；要改就改 XcodeGen 的配置后再执行 `make project`。
+- Web Extension 是从**锁定的上游提交**构建的，不跟随分支推进。`make verify` 会复核这个锁定。
+- SwiftUI 容器 App 刻意保持极简：只负责承载 `.appex` 并提示如何启用。所有翻译逻辑都在扩展里。
 
 ---
 
-## Updating the app
+## 如何更新
 
-On launch the app queries GitHub Releases once and, when a newer version exists,
-shows an "Update to x.y.z" badge next to the version label. Clicking it opens a
-sheet with the release notes and a download link.
+本仓库不再发布 Release，应用内的更新检查不会再提示新版本。更新方式是重新构建：
 
-Updates are not installed automatically: releases are unsigned, so replacing the
-running app would be refused by Gatekeeper. Download the DMG, drag the app into
-Applications to replace the old copy, and your extension settings (translation
-providers, site rules, …) are preserved.
+```sh
+git pull
+make clean && make deps && make all
+```
 
-A failed check (offline, no releases published yet) stays out of the way and only
-offers a "Check for Updates" retry link.
+然后把新的 `build/App/简约翻译.app` 重新拖入「应用程序」覆盖旧版即可，
+Safari 中的扩展配置（翻译源、站点规则等）会保留。
 
 ---
 
-## Updating upstream
+## 如何跟进上游
 
-The upstream pin lives in `config/build.config.mjs`:
+上游版本锁定在 `config/build.config.mjs`：
 
 ```js
 export const upstream = {
@@ -240,98 +220,75 @@ export const upstream = {
 };
 ```
 
-To upgrade:
+升级步骤：
 
-1. Find the upstream release tag and its commit on
-   [fishjar/kiss-translator/releases](https://github.com/fishjar/kiss-translator/releases).
-2. Update `upstream.version` and `upstream.commit` (and `app.marketingVersion`, which mirrors
-   it).
-3. Run `make clean && make deps && make verify` — this re-verifies the commit and rebuilds.
-4. Add a `CHANGELOG.md` entry, commit, tag `v<version>`, push the tag. The release workflow
-   refuses to publish if the tag does not match `app.marketingVersion`.
+1. 在 [fishjar/kiss-translator/releases](https://github.com/fishjar/kiss-translator/releases)
+   找到上游发布 tag 及其对应提交。
+2. 更新 `upstream.version` 与 `upstream.commit`，同时同步 `app.marketingVersion`。
+3. 执行 `make clean && make deps && make verify`，复核提交并重新构建。
+4. 在 `CHANGELOG.md` 里补一条记录并提交。
 
-**The version you ship is the upstream version.** There is no separate packaging version
-number; `2.1.1` here means "upstream KISS Translator 2.1.1, packaged for Safari".
-Packaging-only fixes are added to the same changelog section and shipped as part of the
-next upstream bump rather than as a separate tag, so the version always identifies the
-upstream release.
+**版本号沿用上游版本号。** 本项目没有独立的打包版本号，`2.1.1` 的含义就是
+「上游 KISS Translator 2.1.1 的 Safari 打包版」。只涉及打包层的修复会并入同一条更新日志，
+随下一次上游升级一起记录，以保证版本号始终对应清晰的上游版本。
 
 ---
 
-## License & attribution
+## 许可证与署名
 
-**This project is licensed under the GNU General Public License v3.0.** See [LICENSE](LICENSE)
-and [NOTICE](NOTICE).
+**本项目以 GNU GPL v3.0 发布。** 见 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)。
 
-- **Original project:** [KISS Translator](https://github.com/fishjar/kiss-translator) by
-  **fishjar** (Gabe), licensed GPL-3.0.
-- This repository is a **derivative work**: it redistributes a build of the upstream web
-  extension and adds a native macOS wrapper (SwiftUI container app, build scripts, project
-  generator spec). The wrapper code is also GPL-3.0.
-- Corresponding source for every binary we publish is available in this repository and at
-  the pinned upstream commit listed in [NOTICE](NOTICE).
-- **No warranty.** The software is provided "as is", without warranty of any kind, as stated
-  in Sections 15 and 16 of the GPL.
+- **原始项目：** [KISS Translator](https://github.com/fishjar/kiss-translator)，
+  作者 **fishjar**（Gabe），GPL-3.0。
+- 本仓库是**衍生作品**：它分发上游 Web Extension 的构建产物，并额外提供 macOS 原生封装
+  （SwiftUI 容器 App、构建脚本、工程生成配置）。这部分封装代码同样以 GPL-3.0 授权。
+- 本仓库构建的每一个二进制，其对应源码都可以在本仓库以及 [NOTICE](NOTICE) 中列出的上游提交里获取。
+- **不提供任何担保。** 软件按「现状」提供，不附带任何形式的保证，详见 GPL 第 15、16 条。
 
-### Trademark and donation disclaimer
+### 商标与捐赠声明
 
-- "KISS Translator" and its logo belong to the upstream author. This repository **does not
-  claim to be, nor represent, the official KISS Translator extension**, and it has no
-  affiliation with fishjar beyond inheritance of the GPL-licensed code.
-- If you want to support the project financially, donate to the **upstream author** via the
-  links in the [upstream README](https://github.com/fishjar/kiss-translator#appreciation).
-  This repository does not accept donations.
+- 「KISS Translator」名称与 Logo 归上游作者所有。本仓库**不是官方扩展，也不代表官方**，
+  除继承 GPL 代码之外与 fishjar 没有隶属关系。
+- 如果想在经济上支持这个项目，请通过[上游 README 的赞助链接](https://github.com/fishjar/kiss-translator#appreciation)
+  捐赠给**上游作者**。本仓库不接受捐赠。
 
 ---
 
-## FAQ
+## 常见问题
 
-**The extension does not appear in Safari → Settings → Extensions.**
-Make sure the container app has been launched at least once from `/Applications` (Safari only
-discovers extensions that are registered by an installed, launched app). Then quit and reopen
-Safari. If you built from source, see [Run in Xcode](#c-run-in-xcode-for-development) and
-enable **Develop → Allow Unsigned Extensions**.
+**Safari 的「设置 → 扩展」里看不到这个扩展。**
+请确认容器 App 已经从 `/Applications` 至少启动过一次——只有被安装并运行过的 App 注册的扩展，
+Safari 才能发现。之后再退出并重新打开 Safari。如果是自己从源码构建的，请参照
+[在 Xcode 中调试](#b-在-xcode-中调试)开启 **开发 → 允许未签名的扩展**；用 Apple
+Development 证书签名的构建则不需要这一步，直接在 **设置 → 扩展** 中勾选即可。
 
-**Safari says "Safari 无法验证扩展" / "Safari cannot verify the extension".**
-This is the expected Gatekeeper behaviour for an unsigned/ad-hoc-signed build. Clear the
-quarantine attribute as described in [Installation (a)](#a-download-from-releases-recommended-for-users),
-or — for the sources you trust — build it yourself. A properly signed and notarized release
-requires the maintainer's Apple Developer identity and is not automated yet.
+**Safari 提示「Safari 无法验证扩展」。**
+这是未签名 / 临时签名的构建触发了 Gatekeeper，属于预期行为。本地用 Apple Development
+证书构建的 App 没有 quarantine 属性，不会出现这个提示；从别处拷贝来的 App 可以
+右键 → **打开**，或执行
+`xattr -dr com.apple.quarantine "/Applications/简约翻译.app"`。
 
-**Why are releases unsigned? Why is there no notarization?**
-Notarization requires a paid Apple Developer Program membership and a Developer ID
-certificate. Those are private credentials and cannot be placed in a public CI workflow. The
-release workflow produces ad-hoc-signed builds only.
+**能在 iOS / iPadOS 上用吗？**
+暂时不行。项目目前只面向 macOS。要支持 iOS/iPadOS 需要额外的构建目标和 App Store 分发，
+会在后续单独处理。
 
-**Is there a way to avoid the Gatekeeper warning?**
-Build from source, or install a future signed and notarized release. Until then, every build
-published here triggers the "unidentified developer" warning on first launch. This is
-expected and is not a bug.
+**支持 Safari Technology Preview 吗？**
+通常可以，但不在测试范围内。反馈问题时请附上具体的 Safari / STP 版本。
 
-**Can I use this on iOS or iPadOS?**
-Not yet. The project currently targets macOS only. iOS/iPadOS support would require an
-additional build target and App Store distribution, and is tracked separately.
+**翻译本身出错该去哪里反馈？**
+如果问题出在翻译结果、翻译服务或网页排版，请反馈到
+[上游](https://github.com/fishjar/kiss-translator/issues)。如果是安装、签名、容器 App 或构建问题，
+可以查看 [docs/BUILDING.md](docs/BUILDING.md) 的故障排查章节。
 
-**Does it work with Safari Technology Preview?**
-Usually yes, but it is not part of the tested matrix. Report issues with your exact
-Safari/STP version.
-
-**Where do I report a translation bug?**
-If the translation itself is wrong (bad output, missing service, broken page layout),
-report it [upstream](https://github.com/fishjar/kiss-translator/issues). If the problem is
-installation, signing, the container app, or the build, report it
-[here](https://github.com/ftzahao/kiss-translator-safari/issues). See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-**Is my data sent anywhere?**
-The extension sends the text it translates to whichever translation service **you**
-configure — the same behaviour as upstream. This project adds no telemetry and no servers.
-See [SECURITY.md](SECURITY.md).
+**我的数据会被发送到哪里？**
+扩展只会把你待翻译的文本发送给**你自己配置的**翻译服务，行为与上游一致。
+本项目不收集任何遥测，也不架设任何服务器。见 [SECURITY.md](SECURITY.md)。
 
 ---
 
-## Related links
+## 相关链接
 
-- Upstream project: <https://github.com/fishjar/kiss-translator>
-- Upstream companion services: [KISS-Worker](https://github.com/fishjar/kiss-worker) (sync),
-  [kiss-rules](https://github.com/fishjar/kiss-rules) (community rules)
-- Build details: [docs/BUILDING.md](docs/BUILDING.md)
+- 上游项目：<https://github.com/fishjar/kiss-translator>
+- 上游配套服务：[KISS-Worker](https://github.com/fishjar/kiss-worker)（同步）、
+  [kiss-rules](https://github.com/fishjar/kiss-rules)（社区规则）
+- 构建细节：[docs/BUILDING.md](docs/BUILDING.md)

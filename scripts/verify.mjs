@@ -5,7 +5,7 @@
  * This is the check that catches the class of bug which is invisible in a
  * normal build: an .appex whose manifest sits one directory too deep, a
  * missing icon, a stale extension version, or a non-universal binary. Run it
- * after `make all` and in CI.
+ * after `make all`.
  */
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -19,7 +19,7 @@ import { step, info, ok, warn, fail } from "./lib/log.mjs";
 
 const run = promisify(execFile);
 const ROOT = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
-const APP = path.join(ROOT, "build", "App", `${app.productName}.app`);
+const APP = path.join(ROOT, "build", "App", `${app.displayName}.app`);
 
 const problems = [];
 const notes = [];
@@ -170,7 +170,7 @@ async function main() {
   // Safari will not list an extension whose host app has no real Team
   // Identifier; it logs "Computing the code signing dictionary failed" and
   // silently omits the entry from Settings > Extensions. Ad-hoc and unsigned
-  // builds are therefore only fit for CI sanity checks, never for local use.
+  // builds are therefore only fit for sanity checks, never for local use.
   const appTeam = await teamIdentifier(APP);
   const extTeam = await teamIdentifier(path.join(appex));
   try {
@@ -178,7 +178,7 @@ async function main() {
     ok("code signature verifies");
   } catch {
     notes.push(
-      "code signature does not verify — expected for an unsigned CI build before ad-hoc signing"
+      "code signature does not verify — expected for an unsigned build before signing"
     );
   }
 

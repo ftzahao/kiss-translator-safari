@@ -44,7 +44,7 @@ settings:
     ENABLE_HARDENED_RUNTIME: YES
     # DEVELOPMENT_TEAM is intentionally NOT set here. XcodeGen does not expand
     # ${...} environment variables and a hard-coded team id would leak into
-    # unsigned CI builds. Pass it on the command line when signing:
+    # the generated project. Pass it on the command line when signing:
     #   xcodebuild ... DEVELOPMENT_TEAM=QX47UN2DPB
     SWIFT_STRICT_CONCURRENCY: complete
     SWIFT_EMIT_LOC_STRINGS: NO

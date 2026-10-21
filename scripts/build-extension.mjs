@@ -314,7 +314,7 @@ async function publish() {
   const manifest = JSON.parse(
     await fs.readFile(path.join(EXTENSION_DIR, "manifest.json"), "utf8")
   );
-  // A build fingerprint lets the native app and CI confirm what they are
+  // A build fingerprint lets the native app confirm what it is
   // shipping without re-parsing the extension.
   await fs.writeFile(
     path.join(EXTENSION_DIR, "build-info.json"),
@@ -340,7 +340,7 @@ async function publish() {
 }
 
 async function main() {
-  console.log(`\nKISS Translator Safari extension builder`);
+  console.log(`\n简约翻译 (KISS Translator for Safari) — extension builder`);
   console.log(dim(`upstream ${upstream.version} @ ${upstream.commit.slice(0, 7)}`));
 
   try {
