@@ -38,6 +38,12 @@ separate version number.
 
 ### Fixed
 
+- **The popup now follows the system appearance in Safari.** Safari
+  renders an extension popover light unless the page declares support for
+  dark via `color-scheme`; without it `prefers-color-scheme` reports light
+  inside the popup, so upstream's「跟随系统」theme mode was stuck light. The
+  build now injects `<meta name="color-scheme" content="light dark">` into
+  `popup.html` and `options.html`.
 - **Fixed the background crash that showed as「简约翻译」出错 in Safari's
   Extensions settings.** Upstream's safari build bakes
   `REACT_APP_CLIENT="safari"` into the bundle but never lists `safari` in

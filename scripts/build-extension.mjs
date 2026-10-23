@@ -355,6 +355,37 @@ async function normalize(rawDir) {
   for (const change of changes) info(`· ${change}`);
 
   ok("manifest validated");
+
+  step("Adapting extension pages for Safari");
+  await declareColorScheme();
+  ok("extension pages adapted");
+}
+
+
+// Safari renders an extension popover with a light appearance unless the
+// page opts into dark via `color-scheme`. Without the declaration,
+// `prefers-color-scheme` stays "light" inside the popup, so upstream's
+// "auto" (follow system) theme mode is stuck light while Safari itself is
+// dark. Declare both schemes on the extension's own pages; MUI then paints
+// per matchMedia as usual.
+async function declareColorScheme() {
+  for (const name of ["popup.html", "options.html"]) {
+    const file = path.join(RAW_DIR, name);
+    let html = await fs.readFile(file, "utf8");
+    if (html.includes('name="color-scheme"')) {
+      info(`· ${name}: color-scheme already declared`);
+      continue;
+    }
+    const anchor = /<meta charset="utf-8"\/>/;
+    if (!anchor.test(html)) {
+      throw new Error(
+        `${name}: <meta charset> not found — review the color-scheme injection`
+      );
+    }
+    html = html.replace(anchor, (m) => m + '<meta name="color-scheme" content="light dark"/>');
+    await fs.writeFile(file, html);
+    info(`· ${name}: declared color-scheme "light dark"`);
+  }
 }
 
 async function publish() {
