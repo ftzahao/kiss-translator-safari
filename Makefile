@@ -59,11 +59,11 @@ else
 XCODEBUILD_FLAGS += CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 endif
 
-.PHONY: help all deps extension project build sign package dmg zip verify clean distclean icons
+.PHONY: help all deps extension preclean project build sign package dmg zip verify clean distclean icons
 
 help:
 	@printf '\n简约翻译 (KISS Translator for Safari) — build\n\n'
-	@printf '  make all        Full build: web extension, Xcode project, .app, DMG + ZIP\n'
+	@printf '  make all        Full build: web extension, Xcode project, .app, DMG + ZIP (starts clean)\n'
 	@printf '  make deps       Fetch + build the pinned upstream web extension only\n'
 	@printf '  make extension  Same as deps (alias kept for clarity)\n'
 	@printf '  make project    Generate $(PROJECT) with XcodeGen\n'
@@ -93,7 +93,16 @@ deps extension:
 # --------------------------------------------------------------------------
 # Xcode project
 # --------------------------------------------------------------------------
-project:
+# Regenerating the project always starts from a clean slate: stale
+# DerivedData or a leftover staged app can leak deleted files into an
+# incremental build. The upstream extension output (build/extension) is kept;
+# it is cheap to re-publish. `dmg`/`sign` alone never trigger this, so
+# re-packaging or re-signing an existing bundle keeps working.
+preclean:
+	@rm -rf "$(DERIVED)" "$(APP)" "$(DIST)" "$(PROJECT)"
+	@echo "==> cleaned previous build outputs"
+
+project: preclean
 	@if [ -z "$(XCODEGEN)" ]; then \
 		echo "error: xcodegen not found. Install it with 'brew install xcodegen'." >&2; \
 		exit 1; \
@@ -159,8 +168,8 @@ verify:
 icons:
 	@$(PYTHON) scripts/generate-icons.py
 
-clean:
-	@rm -rf build/DerivedData build/App build/dist $(PROJECT) build/extension build/upstream-safari-raw
+clean: preclean
+	@rm -rf build/extension build/upstream-safari-raw
 	@echo "==> cleaned build outputs"
 
 distclean: clean

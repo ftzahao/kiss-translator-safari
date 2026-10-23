@@ -43,7 +43,13 @@ corepack enable && corepack prepare pnpm@9.14.4 --activate
 | `make dmg` | `build` | `build/dist/简约翻译-<version>.dmg`, `.zip` |
 | `make all` | — | runs extension → project → build → dmg |
 | `make verify` | `deps` | verifies the upstream pin, the extension manifest and the app bundle |
-| `make clean` | — | removes `build/`, `.build/`, generated project file |
+| `make clean` | — | removes build outputs and the generated project file |
+
+Every project regeneration (`make project`, and therefore `make build` and
+`make all`) first deletes previous build outputs — DerivedData, the staged
+`.app`, `dist/` and the generated `.xcodeproj` — so a rebuild never inherits
+stale files. `build/extension` is kept (cheap to re-publish), and `make dmg`
+/ `make sign` run standalone never trigger the cleanup.
 
 Pass `SIGNING=0` to build without any signing identity (not usable with Safari —
 see [Signing](#signing)):

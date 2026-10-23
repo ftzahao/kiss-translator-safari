@@ -11,6 +11,11 @@ separate version number.
 
 ### Changed
 
+- **Every project regeneration now starts from a clean slate.** `make
+  project` (and with it `make build` / `make all`) first deletes previous
+  build outputs — DerivedData, the staged app, `dist/` and the generated
+  `.xcodeproj` — so a rebuild never inherits stale files. `make dmg` and
+  `make sign` still work standalone without wiping anything.
 - **The app is now named 简约翻译.** The built bundle is `build/App/简约翻译.app`,
   DMG/ZIP artifacts are `简约翻译-<version>.dmg` / `.zip`, and Safari lists the
   extension as 简约翻译 (manifest name + onboarding copy). Internal names
