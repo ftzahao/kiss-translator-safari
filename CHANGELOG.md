@@ -18,6 +18,11 @@ separate version number.
 
 ### Removed
 
+- **In-app update checking is removed.** The app no longer queries GitHub
+  Releases at launch or from the onboarding footer; this repository no
+  longer publishes releases, so the check could never find anything. The
+  footer keeps only the static version label — to update, pull the repo and
+  rebuild.
 - **CI and release are gone; this repository is now local-build only.** The
   GitHub Actions workflows (`ci.yml`, `release.yml`), issue/PR templates and
   the English `README.md` were deleted. The only supported flow is cloning the

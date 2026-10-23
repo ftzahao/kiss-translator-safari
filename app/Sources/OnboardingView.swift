@@ -12,9 +12,6 @@ import SwiftUI
 struct OnboardingView: View {
     @State private var model = OnboardingViewModel()
 
-    /// The update currently being described in an alert, if any.
-    @State private var presentedUpdate: UpdateRelease?
-
     private let windowWidth = OnboardingLayout.width
     private let windowHeight = OnboardingLayout.height
 
@@ -28,35 +25,12 @@ struct OnboardingView: View {
         .background(contentBackground)
         .task {
             await model.refreshStatus()
-            // Convenience check; quiet on failure and never blocks the UI.
-            await model.checkForUpdatesIfNeeded()
         }
         .onChange(of: model.isOpeningPreferences) { _, isOpening in
             // Safari is about to come to the front; re-check once we come back.
             if !isOpening {
                 Task { await model.refreshStatus() }
             }
-        }
-        .onChange(of: model.availableUpdate) { _, update in
-            // Surface a newly discovered release once, as a native sheet.
-            if let update, presentedUpdate == nil {
-                presentedUpdate = update
-            }
-        }
-        .sheet(item: $presentedUpdate) { release in
-            UpdateAvailableSheet(
-                release: release,
-                currentVersion: model.version,
-                onDownload: {
-                    presentedUpdate = nil
-                    model.openUpdateDownload(release)
-                },
-                onViewAllReleases: {
-                    presentedUpdate = nil
-                    model.openAllReleases()
-                },
-                onLater: { presentedUpdate = nil }
-            )
         }
     }
 
@@ -301,55 +275,12 @@ struct OnboardingView: View {
         .padding(.bottom, 20)
     }
 
-    /// Version label plus the update affordance.
-    ///
-    /// Kept on one line so the window height never changes: when an update
-    /// exists the label turns into a highlighted button, it does not push the
-    /// layout around.
+    /// Version label. This app is local-build only: updates mean rebuilding
+    /// from a newer upstream pin, so there is no in-app update check.
     private var versionRow: some View {
-        HStack(spacing: 8) {
-            Text(String(localized: "版本", comment: "Version label") + " \(model.version) (\(model.build))")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-
-            switch model.updateState {
-            case .idle, .upToDate:
-                EmptyView()
-
-            case .checking:
-                ProgressView()
-                    .controlSize(.mini)
-                    .scaleEffect(0.7)
-
-            case .available(let release):
-                Button {
-                    presentedUpdate = release
-                } label: {
-                    HStack(spacing: 3) {
-                        Image(systemName: "arrow.down.circle.fill")
-                        Text(String(localized: "可更新至", comment: "Update available label") + " \(release.version)")
-                    }
-                    .font(.caption2.weight(.medium))
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(.white)
-                .padding(.horizontal, 7)
-                .padding(.vertical, 2)
-                .background(Color.accentColor, in: Capsule())
-                .help(String(localized: "查看新版本说明", comment: "Tooltip on update badge"))
-
-            case .failed(let message):
-                // A background check failing is not actionable, so it is only
-                // a retry affordance with the reason as a tooltip.
-                Button(String(localized: "检查更新", comment: "Manual update check link")) {
-                    Task { await model.checkForUpdates() }
-                }
-                .buttonStyle(.link)
-                .font(.caption2)
-                .help(message)
-            }
-        }
-        .animation(.easeInOut(duration: 0.18), value: model.updateState)
+        Text(String(localized: "版本", comment: "Version label") + " \(model.version) (\(model.build))")
+            .font(.caption2)
+            .foregroundStyle(.tertiary)
     }
 
     private func footerLink(_ title: String, _ url: URL) -> some View {
