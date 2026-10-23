@@ -38,6 +38,15 @@ separate version number.
 
 ### Fixed
 
+- **Fixed the background crash that showed as「简约翻译」出错 in Safari's
+  Extensions settings.** Upstream's safari build bakes
+  `REACT_APP_CLIENT="safari"` into the bundle but never lists `safari` in
+  `CLIENT_EXTS`, so every `isExt` check compiled to false and the storage
+  layer fell back to `window.localStorage` — which does not exist in an MV3
+  service worker (`ReferenceError: Can't find variable: window`). The build
+  now patches `CLIENT_EXTS` right after checkout so the Safari build is
+  treated as the extension it is (uses `browser.storage.local`). Anchors
+  fail loudly if a future pin changes that file.
 - **The advertised build orchestrator `scripts/release.mjs` did not exist.** The
   README, `docs/BUILDING.md` and the `[0.1.0]` notes referred to a script that
   was never committed; the real build flow is `make all` (plus `make verify`).

@@ -105,6 +105,15 @@ plutil -p "build/App/简约翻译.app/Contents/PlugIns/KISSTranslatorExtension.a
 
 Do not hard-code any of these values elsewhere; adjust the config and regenerate.
 
+### Upstream patches
+
+`scripts/build-extension.mjs` patches one upstream file right after checkout,
+before building: `src/config/client.js` gets `safari` added to `CLIENT_EXTS`
+(upstream's own safari target sets `REACT_APP_CLIENT=safari` but leaves safari
+out of that list, which crashes the background service worker — see the
+changelog). The patch is anchored on the pinned commit and aborts the build if
+the file drifted, so bumping `upstream.commit` will surface it for review.
+
 ## Signing
 
 Safari only lists a web extension whose containing app carries a real **Team

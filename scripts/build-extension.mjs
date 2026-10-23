@@ -211,6 +211,58 @@ async function fetchUpstream() {
 // Upstream build
 // ---------------------------------------------------------------------------
 
+// Upstream's safari build target bakes REACT_APP_CLIENT="safari" into the
+// bundle, but their CLIENT_EXTS list ("chrome", "edge", "firefox",
+// "thunderbird") never mentions safari — every `isExt` check therefore
+// compiles to false. The storage layer then takes its web fallback
+// `window.localStorage`, which does not exist in an MV3 service worker, and
+// the background dies on startup with "ReferenceError: Can't find variable:
+// window". Until upstream ships this, patch safari into CLIENT_EXTS right
+// after checkout. Anchored on the pinned commit: if the file drifts, fail
+// and re-review instead of silently building a broken bundle.
+async function patchUpstreamForSafari() {
+  step("Patching upstream client detection");
+  const file = path.join(UPSTREAM_DIR, "src", "config", "client.js");
+  let text = await fs.readFile(file, "utf8");
+
+  if (text.includes("CLIENT_SAFARI")) {
+    ok("safari already listed in CLIENT_EXTS (fixed upstream?)");
+    return;
+  }
+
+  const constNeedle =
+    'export const CLIENT_THUNDERBIRD = "thunderbird"; // Thunderbird 邮件客户端扩展';
+  const listNeedle = [
+    "export const CLIENT_EXTS = [",
+    "  CLIENT_CHROME,",
+    "  CLIENT_EDGE,",
+    "  CLIENT_FIREFOX,",
+    "  CLIENT_THUNDERBIRD,",
+    "];",
+  ].join("\n");
+  if (!text.includes(constNeedle) || !text.includes(listNeedle)) {
+    throw new Error(
+      "upstream src/config/client.js no longer matches the safari patch " +
+        "anchors; the pin moved — review the patch before rebuilding."
+    );
+  }
+
+  text = text
+    .replace(
+      constNeedle,
+      constNeedle + '\nexport const CLIENT_SAFARI = "safari"; // Safari 扩展（本仓库补充）'
+    )
+    .replace(
+      listNeedle,
+      listNeedle.replace(
+        "  CLIENT_THUNDERBIRD,",
+        "  CLIENT_THUNDERBIRD,\n  CLIENT_SAFARI,"
+      )
+    );
+  await fs.writeFile(file, text);
+  ok("safari added to CLIENT_EXTS so isExt is true in the service worker");
+}
+
 async function buildUpstream(pnpmBin) {
   step("Installing upstream dependencies");
 
@@ -346,6 +398,7 @@ async function main() {
   try {
     const pnpmBin = await checkToolchain();
     await fetchUpstream();
+    await patchUpstreamForSafari();
     const raw = await buildUpstream(pnpmBin);
     await normalize(raw);
     const manifest = await publish();
