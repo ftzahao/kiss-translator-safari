@@ -11,6 +11,12 @@ separate version number.
 
 ### Changed
 
+- **The built bundle is now 简约翻译 end to end.** Xcode builds
+  `简约翻译.app` directly (was `KISSTranslator.app`, renamed only when
+  staged): the executable is `简约翻译`, the embedded extension is
+  `简约翻译 Extension.appex`, and System Settings no longer shows the
+  「KISSTranslator的简约翻译」 prefix for the extension. Xcode target,
+  scheme, project name, bundle ids and the Swift module name stay ASCII.
 - **Every project regeneration now starts from a clean slate.** `make
   project` (and with it `make build` / `make all`) first deletes previous
   build outputs — DerivedData, the staged app, `dist/` and the generated

@@ -76,7 +76,9 @@ targets:
   KISSTranslator:
     type: application
     platform: macOS
-    productName: KISSTranslator
+    # Target name stays ASCII (scheme/project reference it); the built
+    # product, executable and menu-bar name use the display name.
+    productName: 简约翻译
     sources:
       - path: app/Sources
       # Shared with the extension target (which compiles it from its own
@@ -97,7 +99,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ftzahao.kisstranslator
-        PRODUCT_NAME: KISSTranslator
+        PRODUCT_NAME: 简约翻译
         INFOPLIST_FILE: app/Info.plist
         GENERATE_INFOPLIST_FILE: NO
         CODE_SIGN_ENTITLEMENTS: app/KISSTranslator.entitlements
@@ -117,7 +119,7 @@ targets:
   KISSTranslator Extension:
     type: app-extension
     platform: macOS
-    productName: KISSTranslator Extension
+    productName: 简约翻译 Extension
     sources:
       - path: extension/Sources
       - path: extension/Info.plist
@@ -151,7 +153,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ftzahao.kisstranslator.extension
-        PRODUCT_NAME: KISSTranslator Extension
+        PRODUCT_NAME: 简约翻译 Extension
         PRODUCT_MODULE_NAME: KISSTranslator_Extension
         INFOPLIST_FILE: extension/Info.plist
         GENERATE_INFOPLIST_FILE: NO

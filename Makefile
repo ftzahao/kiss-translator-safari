@@ -30,7 +30,7 @@ SCHEME    := $(PRODUCT)
 CONFIG    := Release
 DERIVED   := build/DerivedData
 APP       := build/App/$(DISPLAY).app
-BUILT_APP := $(DERIVED)/Build/Products/$(CONFIG)/$(PRODUCT).app
+BUILT_APP := $(DERIVED)/Build/Products/$(CONFIG)/$(DISPLAY).app
 DIST      := build/dist
 
 # SIGNING=1 (default) signs with a local development identity when available.
@@ -137,10 +137,10 @@ sign:
 	@# `codesign --deep` the outer bundle only: that leaves the extension with an
 	@# inconsistent signature and Safari then cannot verify/load it.
 	@codesign --force --options runtime --timestamp --sign "$(DEVELOPER_ID)" \
-		"$(APP)/Contents/PlugIns/KISSTranslator Extension.appex/Contents/MacOS/KISSTranslator Extension"
+		"$(APP)/Contents/PlugIns/简约翻译 Extension.appex/Contents/MacOS/简约翻译 Extension"
 	@codesign --force --options runtime --timestamp --sign "$(DEVELOPER_ID)" \
 		--entitlements extension/KISSTranslatorExtension.entitlements \
-		"$(APP)/Contents/PlugIns/KISSTranslator Extension.appex"
+		"$(APP)/Contents/PlugIns/简约翻译 Extension.appex"
 	@codesign --force --options runtime --timestamp --sign "$(DEVELOPER_ID)" \
 		--entitlements app/KISSTranslator.entitlements "$(APP)"
 	@# An ad-hoc `--sign -` (identity "-") drops entitlements unless they are

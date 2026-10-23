@@ -66,9 +66,9 @@ build/
 │   └── 简约翻译.app
 │       └── Contents/
 │           ├── Info.plist
-│           ├── MacOS/KISSTranslator
+│           ├── MacOS/简约翻译
 │           └── PlugIns/
-│               └── KISSTranslatorExtension.appex
+│               └── 简约翻译 Extension.appex
 │                   └── Contents/
 │                       ├── Info.plist
 │                       └── Resources/
@@ -86,8 +86,8 @@ Everything under `build/` is git-ignored. The same applies to the generated
 Quick sanity check after a build:
 
 ```sh
-lipo -info "build/App/简约翻译.app/Contents/MacOS/KISSTranslator"   # arm64 x86_64
-plutil -p "build/App/简约翻译.app/Contents/PlugIns/KISSTranslatorExtension.appex/Contents/Resources/manifest.json" | head
+lipo -info "build/App/简约翻译.app/Contents/MacOS/简约翻译"   # arm64 x86_64
+plutil -p "build/App/简约翻译.app/Contents/PlugIns/简约翻译 Extension.appex/Contents/Resources/manifest.json" | head
 ```
 
 ## Configuration
@@ -96,7 +96,8 @@ plutil -p "build/App/简约翻译.app/Contents/PlugIns/KISSTranslatorExtension.a
 
 - `upstream.version` / `upstream.commit` — the pinned upstream release
 - `upstream.pnpmVersion` — must be 9.14.4
-- `app.productName` — `KISSTranslator` (Xcode target, executable and project name; internal, ASCII)
+- `app.productName` — `KISSTranslator` (Xcode target, scheme and project
+  name only; the built bundle and executable use `app.displayName`)
 - `app.displayName` — `简约翻译` (user-visible: the `.app` bundle name, DMG/ZIP basename, Safari extension name)
 - `app.bundleId` / `app.extensionBundleId` — `com.ftzahao.kisstranslator[.extension]`
 - `app.marketingVersion` — mirrors the upstream version
@@ -199,7 +200,7 @@ download — check which one you have before rebuilding:
    signatures as `@MainActor`, so a reply handler written in actor context
    traps with `EXC_BREAKPOINT` / `dispatch_assert_queue_fail` in
    `SafariExtensionBridge.state(of:)`. Check
-   `~/Library/Logs/DiagnosticReports/KISSTranslator-*.ips`: if it exists, the
+   `~/Library/Logs/DiagnosticReports/简约翻译-*.ips`: if it exists, the
    process died and there is nothing left to click. `SafariExtensionBridge`
    now creates every reply handler in a non-isolated free function and bounds
    each call with a 5 s timeout; never write a reply closure inside

@@ -154,7 +154,8 @@ async function main() {
   }
 
   // --------------------------------------------------------- architecture
-  const binary = path.join(APP, "Contents", "MacOS", app.productName);
+  // The executable takes the display name (PRODUCT_NAME), not productName.
+  const binary = path.join(APP, "Contents", "MacOS", app.displayName);
   try {
     const { stdout } = await run("lipo", ["-archs", binary]);
     const archs = stdout.trim().split(/\s+/);

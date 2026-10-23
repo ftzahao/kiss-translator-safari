@@ -30,7 +30,8 @@ export const app = {
   // Internal plumbing (bundle ids, Xcode target/scheme, executable name)
   // keeps `productName` and stays ASCII.
   displayName: "简约翻译",
-  // Product name; also the .app bundle name and the Xcode target name.
+  // Xcode target, scheme and generated project name only; the built
+  // .app bundle and executable use `displayName`.
   productName: "KISSTranslator",
   // Bundle identifiers.
   bundleId: "com.ftzahao.kisstranslator",
